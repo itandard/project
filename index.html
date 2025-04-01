@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netlify 테스트 호옹</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        button { padding: 10px 20px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>안녕하세요! Netlify 배포 테스트</h1>
+    <button onclick="showMessage()">클릭하세요</button>
+    <p id="message"></p>
+
+    <script>
+        function showMessage() {
+            document.getElementById("message").innerText = "Netlify 배포 성공!";
+        }
+    </script>
+</body>
+</html>
