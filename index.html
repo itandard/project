@@ -5,80 +5,119 @@
   <title>포켓몬 카드 뽑기(by 홍정보)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
+    :root{
       --primary:#ffca3a; --primaryHover:#eaaa00;
       --red:#e03131; --blue:#1c7ed6; --gray:#868e96;
+      --text:#222; --muted:#555; --bg:#eef7ff; --card:#fff;
     }
-    body { font-family:'Segoe UI',system-ui,-apple-system,Apple SD Gothic Neo,맑은 고딕,sans-serif; text-align:center; background:#eef7ff; padding:20px; }
-    h1 { color:#d62828; }
-    #controls { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
-    button {
-      padding:12px 18px; font-size:16px; cursor:pointer; background:var(--primary);
-      border:none; border-radius:12px; transition:.25s; box-shadow:0 2px 6px rgba(0,0,0,.05);
+    html,body{height:100%}
+    body{
+      font-family:'Segoe UI',system-ui,-apple-system,Apple SD Gothic Neo,맑은 고딕,sans-serif;
+      color:var(--text); background:var(--bg); margin:0; padding:16px;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
-    button:hover { background:var(--primaryHover); }
+    h1{color:#d62828; font-size:clamp(20px,4.5vw,28px); margin:6px 0 14px}
 
-    #status { margin-top:8px; color:#555; font-size:14px; }
-    .progress-wrap {
-      width: 92%; max-width: 560px; height: 16px; margin: 10px auto 18px;
-      border-radius: 10px; background: #dfe9f3; border: 1px solid #b8c3ce; overflow: hidden;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.08);
+    /* 컨트롤 */
+    #controls{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
+    button{
+      padding:12px 18px; font-size:clamp(14px,3.5vw,16px);
+      cursor:pointer; background:var(--primary); color:#000;
+      border:none; border-radius:12px; transition:.25s;
+      box-shadow:0 2px 6px rgba(0,0,0,.05);
+      min-width:140px
     }
-    .progress-fill {
-      height: 100%; width: 0%;
-      background: linear-gradient(90deg, #69db7c, #38d9a9 40%, #22b8cf 70%, #748ffc);
-      transition: width .25s ease;
+    button:hover{background:var(--primaryHover)}
+    @media (max-width:480px){
+      #controls{gap:8px}
+      button{flex:1 1 100%; min-width:unset}
     }
 
-    .card {
-      width: 330px; margin: 20px auto; padding: 16px;
-      border: 4px solid #333; border-radius: 16px; background: white;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2); animation: flip 0.6s ease-in-out;
-      position: relative; text-align: left;
+    /* 상태 + 진행바 */
+    #status{margin-top:8px; color:var(--muted); font-size:clamp(12px,3.2vw,14px); text-align:center}
+    .progress-wrap{
+      width:min(560px,92vw); height:14px; margin:10px auto 18px;
+      border-radius:10px; background:#dfe9f3; border:1px solid #b8c3ce; overflow:hidden;
+      box-shadow:inset 0 1px 2px rgba(0,0,0,.08)
     }
-    .card img { width: 150px; display: block; margin: 0 auto; }
-    .card-name { margin: 10px 0; font-size: 22px; font-weight: bold; text-align: center; }
-    .type-badge {
+    .progress-fill{
+      height:100%; width:0%;
+      background:linear-gradient(90deg,#69db7c,#38d9a9 40%,#22b8cf 70%,#748ffc);
+      transition:width .25s ease
+    }
+
+    /* 카드 */
+    .card{
+      width:min(360px,95vw); margin:16px auto; padding:14px 14px 16px;
+      border:4px solid #333; border-radius:16px; background:var(--card);
+      box-shadow:0 0 15px rgba(0,0,0,.2); animation:flip .6s ease-in-out;
+      text-align:left
+    }
+    .card img{
+      width:min(160px,60vw); max-width:100%; height:auto;
+      display:block; margin:4px auto 6px
+    }
+    .card-name{
+      margin:8px 0; font-size:clamp(18px,4.5vw,22px);
+      font-weight:800; text-align:center
+    }
+    .type-badge{
       display:inline-block; padding:3px 8px; margin:2px; border-radius:8px;
-      background:#ccc; color:white; font-weight:bold; font-size:12px; text-transform:capitalize;
+      background:#ccc; color:#fff; font-weight:700; font-size:12px; text-transform:capitalize
     }
-    /* 타입별 색상 */
-    .type-fire { background:#f08030; } .type-water { background:#6890f0; }
-    .type-grass { background:#78c850; } .type-electric { background:#f8d030; color:#333; }
-    .type-ice { background:#98d8d8; color:#000; } .type-fighting { background:#c03028; }
-    .type-poison { background:#a040a0; } .type-ground { background:#e0c068; color:#000; }
-    .type-flying { background:#a890f0; } .type-psychic { background:#f85888; }
-    .type-dark { background:#705848; } .type-rock { background:#b8a038; }
-    .type-bug { background:#a8b820; } .type-dragon { background:#7038f8; }
-    .type-ghost { background:#705898; } .type-steel { background:#b8b8d0; color:#000; }
-    .type-fairy { background:#f0b6bc; color:#000; } .type-normal { background:#a8a878; }
+    /* 타입 색상 */
+    .type-fire{background:#f08030}.type-water{background:#6890f0}
+    .type-grass{background:#78c850}.type-electric{background:#f8d030;color:#333}
+    .type-ice{background:#98d8d8;color:#000}.type-fighting{background:#c03028}
+    .type-poison{background:#a040a0}.type-ground{background:#e0c068;color:#000}
+    .type-flying{background:#a890f0}.type-psychic{background:#f85888}
+    .type-dark{background:#705848}.type-rock{background:#b8a038}
+    .type-bug{background:#a8b820}.type-dragon{background:#7038f8}
+    .type-ghost{background:#705898}.type-steel{background:#b8b8d0;color:#000}
+    .type-fairy{background:#f0b6bc;color:#000}.type-normal{background:#a8a878}
 
-    /* 설명/능력치 테이블: 가운데 정렬 */
-    table.info-table {
-      width:100%; border-collapse:collapse; margin:10px auto; font-size:14px;
-      text-align:center;
+    /* 정보 테이블: 모바일 시인성 개선 */
+    table.info-table{
+      width:100%; border-collapse:collapse; margin:8px auto 0;
+      font-size:clamp(12px,3.2vw,14px); text-align:center
     }
-    .info-table th { background:#f7f7f7; padding:6px; border-bottom:1px solid #ccc; width:38%; }
-    .info-table td { padding:6px; border-bottom:1px solid #eee; }
+    .info-table th{
+      background:#f7f7f7; padding:6px; border-bottom:1px solid #ccc; width:40%;
+      font-weight:700
+    }
+    .info-table td{padding:6px; border-bottom:1px solid #eee; word-break:keep-all}
+    @media (max-width:420px){
+      .info-table th,.info-table td{padding:5px}
+      .info-table th{width:42%}
+    }
 
     /* 테두리 규칙 */
-    .border-red  { border-color: var(--red)  !important; }
-    .border-blue { border-color: var(--blue) !important; }
-    .border-gray { border-color: var(--gray) !important; }
+    .border-red{border-color:var(--red)!important}
+    .border-blue{border-color:var(--blue)!important}
+    .border-gray{border-color:var(--gray)!important}
 
-    @keyframes flip { 0%{transform:rotateY(0)} 50%{transform:rotateY(90deg)} 100%{transform:rotateY(0)} }
-
-    .deck-container { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top: 20px; }
-    .deck-card {
-      width: 110px; padding: 6px; border: 3px solid #666; border-radius: 8px;
-      background: white; display: flex; flex-direction: column; align-items: center; cursor: pointer;
+    /* 모션 최소화 설정 존중 */
+    @media (prefers-reduced-motion:reduce){
+      .card{animation:none}
     }
-    .deck-card img { width: 72px; height: 72px; object-fit: contain; }
-    .deck-card-name { font-size: 13px; margin-top: 5px; text-transform: capitalize; text-align: center; }
+    @keyframes flip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
+
+    /* 덱: 반응형 그리드 */
+    .deck-container{
+      display:grid; gap:10px; margin:16px auto 0;
+      grid-template-columns:repeat(auto-fill,minmax(88px,1fr));
+      width:min(760px,96vw)
+    }
+    .deck-card{
+      padding:6px; border:3px solid #666; border-radius:8px; background:#fff;
+      display:flex; flex-direction:column; align-items:center; cursor:pointer
+    }
+    .deck-card img{width:72px; height:72px; object-fit:contain}
+    .deck-card-name{font-size:12px; margin-top:5px; text-transform:capitalize; text-align:center}
 
     /* 등급 텍스트 */
-    .grade { font-weight: 600; }
-    .grade-S { color: #d62828; font-weight: 800; }
+    .grade{font-weight:700}
+    .grade-S{color:#d62828; font-weight:900}
   </style>
 </head>
 <body>
@@ -95,10 +134,8 @@
 
   <div id="card-slot"></div>
 
-  <h2>내 카드 덱</h2>
+  <h2 style="margin:14px auto 8px; font-size:clamp(18px,4.2vw,22px);">내 카드 덱</h2>
   <div class="deck-container" id="deck-container"></div>
-
-  <audio id="draw-sound" src="https://www.myinstants.com/media/sounds/pokemon.mp3"></audio>
 
 <script>
   // ===== 설정/상수 =====
@@ -138,98 +175,79 @@
     }
   }
 
-  function setStatus(msg) {
-    const el = document.getElementById('status');
-    if (el) el.textContent = msg;
-  }
-  function setProgress(pct) {
-    const bar = document.getElementById('progress-fill');
-    if (bar) bar.style.width = Math.max(0, Math.min(100, pct)) + '%';
-  }
-  function toggleProgress(show) {
-    const wrap = document.getElementById('progress-wrap');
-    if (wrap) wrap.style.display = show ? 'block' : 'none';
-  }
+  function setStatus(msg){ const el = document.getElementById('status'); if (el) el.textContent = msg; }
+  function setProgress(pct){ const bar = document.getElementById('progress-fill'); if (bar) bar.style.width = Math.max(0,Math.min(100,pct))+'%'; }
+  function toggleProgress(show){ const wrap = document.getElementById('progress-wrap'); if (wrap) wrap.style.display = show?'block':'none'; }
 
-  function pickGrade() {
-    const r = Math.random() * 100;
-    let acc = 0;
-    for (const [g, w] of Object.entries(gradeWeights)) { acc += w; if (r < acc) return g; }
+  function pickGrade(){
+    const r = Math.random()*100; let acc=0;
+    for (const [g,w] of Object.entries(gradeWeights)){ acc+=w; if(r<acc) return g; }
     return 'C';
   }
-  function applyGrades(stats) {
-    return stats.map(s => {
+  function applyGrades(stats){
+    return stats.map(s=>{
       const g = pickGrade();
-      return { ...s, value: Math.round(s.value * gradeMultiplier[g]), grade: g };
+      return {...s, value: Math.round(s.value*gradeMultiplier[g]), grade:g};
     });
   }
-  function isGoodPokemon(stats) {
-    const atk = stats.find(s => s.name === 'attack')?.value || 0;
-    const spd = stats.find(s => s.name === 'speed')?.value || 0;
-    return atk > 100 || spd > 100;
+  function isGoodPokemon(stats){
+    const atk=stats.find(s=>s.name==='attack')?.value||0;
+    const spd=stats.find(s=>s.name==='speed')?.value||0;
+    return atk>100 || spd>100;
   }
-  function countGrades(stats) {
-    let s = 0, a = 0;
-    for (const st of stats) { if (st.grade === 'S') s++; else if (st.grade === 'A') a++; }
-    return { s, a };
-  }
-  function borderClassByGrades(stats) {
-    const { s, a } = countGrades(stats);
-    if (s >= 3) return 'border-red';          // S 3개 이상
-    if (s === 2 && a >= 1) return 'border-blue'; // S 2개 + A 1개 이상
+  function countGrades(stats){ let s=0,a=0; for(const st of stats){ if(st.grade==='S') s++; else if(st.grade==='A') a++; } return {s,a}; }
+  function borderClassByGrades(stats){
+    const {s,a}=countGrades(stats);
+    if(s>=3) return 'border-red';
+    if(s===2 && a>=1) return 'border-blue';
     return 'border-gray';
   }
 
-  // ===== 인덱스(가벼운 목록) 전체 자동 로딩 =====
-  async function loadIndexAll() {
-    if (!nextIndexUrl || isLoadingIndex) return;
+  // ===== 전체 인덱스 자동 로딩 =====
+  async function loadIndexAll(){
+    if(!nextIndexUrl || isLoadingIndex) return;
     isLoadingIndex = true;
     toggleProgress(true);
     setStatus('전체 목록 로딩 중… (잠시만 기다려 주세요)');
 
-    try {
-      while (nextIndexUrl) {
+    try{
+      while(nextIndexUrl){
         const page = await fetchJSON(nextIndexUrl);
         totalCount ??= page.count || 0;
-
-        indexList.push(...page.results); // name,url
+        indexList.push(...page.results);
         nextIndexUrl = page.next;
 
-        const pct = totalCount ? Math.round((indexList.length / totalCount) * 100) : 0;
+        const pct = totalCount ? Math.round((indexList.length/totalCount)*100) : 0;
         setStatus(`전체 목록 로딩 중… ${indexList.length}/${totalCount || '?'} (${pct}%)`);
         setProgress(pct);
 
-        // API 부담 완화
-        if (nextIndexUrl) await sleep(150);
+        if(nextIndexUrl) await sleep(150);
       }
-
       setStatus(`목록 로딩 완료! 총 ${indexList.length}마리`);
-      setProgress(100);
-      toggleProgress(false);
-    } catch (e) {
+      setProgress(100); toggleProgress(false);
+    }catch(e){
       console.error(e);
       setStatus('목록 로딩 실패 (네트워크/레이트 리밋 가능)');
       toggleProgress(false);
-    } finally {
+    }finally{
       isLoadingIndex = false;
     }
   }
 
   // ===== 상세 로딩(뽑을 때 1마리만) + 캐시 =====
-  async function getPokemonDetail(urlOrName) {
-    if (cache.has(urlOrName)) return cache.get(urlOrName);
+  async function getPokemonDetail(urlOrName){
+    if(cache.has(urlOrName)) return cache.get(urlOrName);
 
     const info = await fetchJSON(
-      typeof urlOrName === 'string' && urlOrName.startsWith('http')
-        ? urlOrName
+      (typeof urlOrName==='string' && urlOrName.startsWith('http')) ? urlOrName
         : `https://pokeapi.co/api/v2/pokemon/${urlOrName}`
     );
-    const species = await fetchJSON(info.species?.url || (speciesAPI + info.name));
+    const species = await fetchJSON(info.species?.url || (speciesAPI+info.name));
 
-    const nameKo = species.names.find(n => n.language.name === 'ko')?.name || info.name;
-    const types = info.types.map(t => t.type.name);
-    const stats = info.stats.map(s => ({ name: s.stat.name, value: s.base_stat }));
-    const flavor = (species.flavor_text_entries.find(e => e.language.name === 'ko')?.flavor_text || '').replace(/\n|\f/g,' ');
+    const nameKo = species.names.find(n=>n.language.name==='ko')?.name || info.name;
+    const types = info.types.map(t=>t.type.name);
+    const stats = info.stats.map(s=>({name:s.stat.name, value:s.base_stat}));
+    const flavor = (species.flavor_text_entries.find(e=>e.language.name==='ko')?.flavor_text || '').replace(/\n|\f/g,' ');
 
     const thumb =
       info.sprites.front_default ||
@@ -242,24 +260,22 @@
       info.sprites.other?.home?.front_default ||
       thumb;
 
-    const obj = { id: info.id, nameKo, image, thumb, types, stats, flavor };
-    cache.set(urlOrName, obj);
-    cache.set(info.name, obj);
-    cache.set(info.id, obj);
-    if (info.species?.url) cache.set(info.species.url, obj);
+    const obj = { id:info.id, nameKo, image, thumb, types, stats, flavor };
+    cache.set(urlOrName, obj); cache.set(info.name, obj); cache.set(info.id, obj);
+    if(info.species?.url) cache.set(info.species.url, obj);
     return obj;
   }
 
   // ===== 렌더링 =====
-  function renderCard(p) {
+  function renderCard(p){
     const statsToUse = p.gradedStats || p.stats;
     const good = isGoodPokemon(statsToUse);
     const borderCls = borderClassByGrades(statsToUse);
     const cls = `card ${borderCls} ${good ? 'rarity-good' : ''}`;
-    const badgeHTML = p.types.map(t => `<span class="type-badge type-${t}">${t}</span>`).join(' ');
+    const badgeHTML = p.types.map(t=>`<span class="type-badge type-${t}">${t}</span>`).join(' ');
 
-    const rows = statsToUse.map(s => {
-      const gradeHTML = s.grade ? ` <span class="grade ${s.grade === 'S' ? 'grade-S' : ''}">(${s.grade})</span>` : '';
+    const rows = statsToUse.map(s=>{
+      const gradeHTML = s.grade ? ` <span class="grade ${s.grade==='S'?'grade-S':''}">(${s.grade})</span>` : '';
       return `<tr><th>${statNamesKor[s.name]}</th><td>${s.value}${gradeHTML}</td></tr>`;
     }).join('');
 
@@ -276,48 +292,78 @@
     `;
   }
 
+  // ===== “뾰로롱” 웹오디오 효과음 =====
+  let audioCtx = null;
+  function playChime(){
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      const ctx = audioCtx;
+      const now = ctx.currentTime;
+
+      // 간단한 아르페지오(도-미-솔) + 글리산도 업
+      const freqs = [880, 1175, 1568]; // A5, D6#, G6 근처 밝은 톤
+      freqs.forEach((f, i)=>{
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(f*0.9, now + i*0.04);
+        o.frequency.exponentialRampToValueAtTime(f*1.1, now + i*0.04 + 0.25);
+
+        g.gain.setValueAtTime(0.0001, now + i*0.04);
+        g.gain.exponentialRampToValueAtTime(0.25, now + i*0.04 + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + i*0.04 + 0.28);
+
+        o.connect(g).connect(ctx.destination);
+        o.start(now + i*0.04);
+        o.stop(now + i*0.04 + 0.3);
+      });
+    }catch(_){/* 오디오 불가 환경 무시 */}
+  }
+
   // ===== 이벤트 =====
   const drawBtn = document.getElementById('draw-button');
-  drawBtn.addEventListener('click', async () => {
-    // 요구 2: 로드되기 전에는 대기 메시지
-    if (isLoadingIndex || !indexList.length) {
+  drawBtn.addEventListener('click', async ()=>{
+    // 로딩 중엔 대기 안내
+    if (isLoadingIndex || !indexList.length){
       alert('아직 전체 목록을 불러오는 중입니다. 잠시만 대기해 주세요!');
       return;
     }
 
-    // 인덱스에서 랜덤 선택 → 상세 1마리 로드
-    const meta = indexList[Math.floor(Math.random() * indexList.length)];
+    // 무작위 선택 → 상세 1마리 로드
+    const meta = indexList[Math.floor(Math.random()*indexList.length)];
     setStatus('상세 로딩 중…');
-    try {
+    try{
       const pick = await getPokemonDetail(meta.url);
-      if (!pick.gradedStats) pick.gradedStats = applyGrades(pick.stats);
+      if(!pick.gradedStats) pick.gradedStats = applyGrades(pick.stats);
 
-      const audio = document.getElementById('draw-sound');
-      try { audio.currentTime = 0; audio.play(); } catch (_) {}
+      // 경쾌 효과음
+      playChime();
 
+      // 카드 렌더
       document.getElementById('card-slot').innerHTML = renderCard(pick);
 
+      // 덱 썸네일 추가
       const deck = document.getElementById('deck-container');
       const div = document.createElement('div');
       div.className = 'deck-card';
       div.innerHTML = `
         <img src="${pick.thumb}" alt="" loading="lazy" decoding="async">
         <div class="deck-card-name">${pick.nameKo}</div>`;
-      div.addEventListener('click', () => {
+      div.addEventListener('click', ()=>{
         document.getElementById('card-slot').innerHTML = renderCard(pick);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({top:0, behavior:'smooth'});
       });
       deck.appendChild(div);
 
-      setStatus(`뽑기 완료! (총 인덱스 ${indexList.length}/${totalCount || '?'})`);
-    } catch (e) {
+      setStatus(`뽑기 완료! (총 인덱스 ${indexList.length}/${totalCount||'?'})`);
+    }catch(e){
       console.error(e);
       setStatus('상세 로딩 실패 (네트워크/레이트 리밋 가능)');
     }
   });
 
   // ===== 초기 구동: 전체 인덱스 자동 로딩 =====
-  (async function init() {
+  (async function init(){
     await loadIndexAll(); // 전 페이지 모두 로드
   })();
 </script>
