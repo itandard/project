@@ -1,23 +1,143 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>홍정보의 첫 홈페이지</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-        button { padding: 10px 20px; font-size: 16px; }
-    </style>
+  <meta charset="UTF-8">
+  <title>포켓몬 카드 뽑기 (클릭 재표시 + 테두리 강화)</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #eef7ff; padding: 20px; }
+    h1 { color: #d62828; }
+    #draw-button { padding: 15px 30px; font-size: 20px; cursor: pointer; background: #ffca3a; border: none; border-radius: 12px; transition: 0.3s; }
+    #draw-button:hover { background: #eaaa00; }
+
+    .card {
+      width: 300px; margin: 20px auto; padding: 15px;
+      border: 4px solid #333; border-radius: 16px; background: white;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2); animation: flip 0.6s ease-in-out;
+      position: relative;
+    }
+    .card img { width: 120px; }
+    .card-name { margin: 10px 0; font-size: 22px; font-weight: bold; }
+    .type-badge {
+      display: inline-block; padding: 3px 8px; margin: 2px; border-radius: 8px;
+      background: #ccc; color: white; font-weight: bold; font-size: 12px; text-transform: capitalize;
+    }
+    /* 타입별 색상 */
+    .type-fire { background: #f08030; }  .type-water { background: #6890f0; }
+    .type-grass { background: #78c850; }  .type-electric { background: #f8d030; color: #333; }
+    .type-ice { background: #98d8d8; color: #000; }  .type-fighting { background: #c03028; }
+    .type-poison { background: #a040a0; }  .type-ground { background: #e0c068; color: #000; }
+    .type-flying { background: #a890f0; }  .type-psychic { background: #f85888; }
+    .type-dark { background: #705848; }  .type-rock { background: #b8a038; }
+    .type-bug { background: #a8b820; }  .type-dragon { background: #7038f8; }
+    .type-ghost { background: #705898; }  .type-steel { background: #b8b8d0; color: #000; }
+    .type-fairy { background: #f0b6bc; color: #000; }  .type-normal { background: #a8a878; }
+
+    table.info-table {
+      width: 100%; text-align: left; border-collapse: collapse; margin-top: 10px; font-size: 14px;
+    }
+    .info-table th { background: #f0f0f0; padding: 6px; border-bottom: 1px solid #ccc; width: 35%; }
+    .info-table td { padding: 6px; border-bottom: 1px solid #eee; }
+
+    .rarity-common { border-color: gray; }
+    .rarity-rare { border-color: blue; box-shadow: 0 0 15px rgba(0,0,255,0.5); }
+    .rarity-legendary { border-color: red; animation: fire-glow 1s infinite alternate; }
+    .rarity-good { border-color: purple; box-shadow: 0 0 20px purple; }
+
+    @keyframes fire-glow { 0% { box-shadow: 0 0 10px red; } 100% { box-shadow: 0 0 30px orange; } }
+    @keyframes flip { 0% { transform: rotateY(0); } 50% { transform: rotateY(90deg); } 100% { transform: rotateY(0); } }
+
+    .deck-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
+    .deck-card {
+      width: 100px; padding: 5px; border: 3px solid #666; border-radius: 8px;
+      background: white; display: flex; flex-direction: column; align-items: center; cursor: pointer;
+    }
+    .deck-card img { width: 60px; }
+    .deck-card-name { font-size: 13px; margin-top: 5px; text-transform: capitalize; }
+  </style>
 </head>
 <body>
-    <h1>장유고등학교 1학년! 안녕하세요.</h1>
-    <button onclick="showMessage()">첫 번째 홈페이지 테스트 입니다.</button>
-    <p id="message"></p>
+  <h1>포켓몬 카드 뽑기</h1>
+  <button id="draw-button">카드 뽑기!</button>
+  <div id="card-slot"></div>
+  <h2>내 카드 덱</h2>
+  <div class="deck-container" id="deck-container"></div>
+  <audio id="draw-sound" src="https://www.myinstants.com/media/sounds/pokemon.mp3"></audio>
 
-    <script>
-        function showMessage() {
-            document.getElementById("message").innerText = "홍정보!!!";
-        }
-    </script>
+<script>
+  const speciesAPI = 'https://pokeapi.co/api/v2/pokemon-species/';
+  const limit = 150;
+  let allData = [], isLoading = false;
+
+  const statNamesKor = {
+    hp: 'HP', attack: '공격', defense: '방어',
+    'special-attack': '특수공격', 'special-defense': '특수방어', speed: '스피드'
+  };
+
+  function isGoodPokemon(stats) {
+    const atk = stats.find(s => s.name === 'attack')?.value || 0;
+    const spd = stats.find(s => s.name === 'speed')?.value || 0;
+    return atk > 100 || spd > 100;
+  }
+
+  async function loadAllPokemons() {
+    isLoading = true;
+    try {
+      const list = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${limit}`).then(r => r.json());
+      await Promise.all(list.results.map(async r => {
+        const info = await fetch(r.url).then(r => r.json());
+        const species = await fetch(speciesAPI + info.name).then(r => r.json());
+        const nameKo = species.names.find(n => n.language.name === 'ko')?.name || info.name;
+        const types = info.types.map(t => t.type.name);
+        const stats = info.stats.map(s => ({ name: s.stat.name, value: s.base_stat }));
+        const flavor = species.flavor_text_entries.find(e => e.language.name === 'ko')?.flavor_text.replace(/\n|\f/g,' ') || '';
+
+        allData.push({ id: info.id, nameKo, image: info.sprites.front_default, types, stats, flavor });
+      }));
+    } catch(e) {
+      console.error(e);
+      alert('포켓몬 데이터 로드 실패');
+    }
+    isLoading = false;
+  }
+
+  function renderCard(p) {
+    const rarity = p.isLegendary ? 'legendary' : (p.isRare ? 'rare' : 'common');
+    const good = isGoodPokemon(p.stats);
+    const cls = `card ${rarity} ${good ? 'rarity-good' : ''}`;
+    const badgeHTML = p.types.map(t => `<span class="type-badge type-${t}">${t}</span>`).join(' ');
+    const rows = p.stats.map(s => `<tr><th>${statNamesKor[s.name]}</th><td>${s.value}</td></tr>`).join('');
+    return `
+      <div class="${cls}">
+        <img src="${p.image}" alt="${p.nameKo}">
+        <div class="card-name">${p.nameKo} (#${p.id})</div>
+        <div>${badgeHTML}</div>
+        <table class="info-table">
+          <tr><th>설명</th><td>${p.flavor}</td></tr>
+          ${rows}
+        </table>
+      </div>`;
+  }
+
+  document.getElementById('draw-button').addEventListener('click', async () => {
+    if (isLoading) return alert('로딩 중...');
+    if (!allData.length) await loadAllPokemons();
+    const pick = allData[Math.floor(Math.random() * allData.length)];
+    pick.isRare = Math.random() < 0.2;
+    pick.isLegendary = Math.random() < 0.02;
+    document.getElementById('draw-sound').play();
+    document.getElementById('card-slot').innerHTML = renderCard(pick);
+
+    const deckContainer = document.getElementById('deck-container');
+    const div = document.createElement('div');
+    div.className = 'deck-card';
+    div.innerHTML = `<img src="${pick.image}" alt=""><div class="deck-card-name">${pick.nameKo}</div>`;
+    div.addEventListener('click', () => {
+      document.getElementById('card-slot').innerHTML = renderCard(pick);
+    });
+    deckContainer.appendChild(div);
+  });
+
+  loadAllPokemons();
+</script>
 </body>
 </html>
