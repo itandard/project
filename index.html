@@ -9,8 +9,7 @@
       --primary:#ffca3a; --primaryHover:#eaaa00;
       --red:#e03131; --blue:#1c7ed6; --gray:#868e96;
       --text:#222; --muted:#555; --bg:#eef7ff; --card:#fff;
-      /* 카드/덱 공통 폭(요청사항: 위 카드가 오픈되는 너비와 덱을 일치) */
-      --contentW:min(320px,85vw);
+      --contentW:min(320px,85vw); /* 카드/덱 공통 폭 */
     }
     html,body{height:100%}
     body{
@@ -19,22 +18,40 @@
       text-align:center;
       -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
-    h1{color:#d62828; font-size:clamp(20px,4.5vw,28px); margin:6px 0 14px; text-align:center}
+    h1{color:#d62828; font-size:clamp(20px,4.5vw,28px); margin:6px 0 14px}
 
-    /* 컨트롤 */
+    /* 컨트롤 - CTA 버튼 강화 */
     #controls{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
-    button{
-      padding:12px 18px; font-size:clamp(14px,3.5vw,16px);
-      cursor:pointer; background:var(--primary); color:#000;
-      border:none; border-radius:12px; transition:.25s;
-      box-shadow:0 2px 6px rgba(0,0,0,.05);
-      min-width:140px
+    .cta{
+      --ring: rgba(255,202,58,.55);
+      padding:14px 22px; font-size:clamp(15px,4vw,18px);
+      cursor:pointer; border:none; border-radius:14px;
+      background:linear-gradient(180deg,#ffe066 0%, #ffca3a 55%, #eaaa00 100%);
+      color:#2b2b2b; font-weight:900; letter-spacing:.3px;
+      box-shadow:
+        0 10px 22px rgba(255,170,0,.35),
+        0 2px 6px rgba(0,0,0,.08),
+        inset 0 1px 0 rgba(255,255,255,.7);
+      transform:translateY(0); transition:.2s ease;
+      position:relative; min-width:160px;
     }
-    button:hover{background:var(--primaryHover)}
-    @media (max-width:480px){
-      #controls{gap:8px}
-      button{flex:1 1 100%; min-width:unset}
+    .cta::after{ /* 하이라이트 광택 */
+      content:""; position:absolute; inset:0; border-radius:inherit;
+      background:linear-gradient(180deg,rgba(255,255,255,.6),transparent 40%);
+      pointer-events:none; mix-blend-mode:soft-light;
     }
+    .cta:hover{ transform:translateY(-1px); box-shadow:
+        0 16px 34px rgba(255,170,0,.45),
+        0 2px 10px rgba(0,0,0,.10),
+        inset 0 1px 0 rgba(255,255,255,.85); }
+    .cta:active{ transform:translateY(0); filter:saturate(1.05) }
+    .cta:focus-visible{
+      outline:none; box-shadow:
+        0 0 0 4px var(--ring),
+        0 10px 22px rgba(255,170,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.85);
+    }
+    @media (max-width:480px){ .cta{flex:1 1 100%; min-width:unset} }
 
     /* 상태 + 진행바 */
     #status{margin-top:8px; color:var(--muted); font-size:clamp(12px,3.2vw,14px)}
@@ -49,7 +66,7 @@
       transition:width .25s ease
     }
 
-    /* 카드 (요청: 덱과 같은 폭) */
+    /* 메인 카드 */
     .card{
       width:var(--contentW);
       margin:16px auto; padding:14px 18px 16px;
@@ -57,19 +74,10 @@
       box-shadow:0 0 15px rgba(0,0,0,.2); animation:flip .6s ease-in-out;
       text-align:center;
     }
-    .card img{
-      width:min(150px,55vw); max-width:100%; height:auto;
-      display:block; margin:4px auto 6px
-    }
-    .card-name{
-      margin:8px 0; font-size:clamp(18px,4.5vw,22px);
-      font-weight:800;
-    }
-    .type-badge{
-      display:inline-block; padding:3px 8px; margin:2px; border-radius:8px;
-      background:#ccc; color:#fff; font-weight:700; font-size:12px; text-transform:capitalize
-    }
-    /* 타입 색상 */
+    .card img{ width:min(150px,55vw); max-width:100%; height:auto; display:block; margin:4px auto 6px }
+    .card-name{ margin:8px 0; font-size:clamp(18px,4.5vw,22px); font-weight:800 }
+    .type-badge{ display:inline-block; padding:3px 8px; margin:2px; border-radius:8px;
+      background:#ccc; color:#fff; font-weight:700; font-size:12px; text-transform:capitalize }
     .type-fire{background:#f08030}.type-water{background:#6890f0}
     .type-grass{background:#78c850}.type-electric{background:#f8d030;color:#333}
     .type-ice{background:#98d8d8;color:#000}.type-fighting{background:#c03028}
@@ -79,36 +87,47 @@
     .type-bug{background:#a8b820}.type-dragon{background:#7038f8}
     .type-ghost{background:#705898}.type-steel{background:#b8b8d0;color:#000}
     .type-fairy{background:#f0b6bc;color:#000}.type-normal{background:#a8a878}
-
-    /* 정보 테이블 */
-    table.info-table{
-      width:100%; border-collapse:collapse; margin:8px auto 0;
-      font-size:clamp(12px,3.2vw,14px); text-align:center
-    }
+    table.info-table{ width:100%; border-collapse:collapse; margin:8px auto 0;
+      font-size:clamp(12px,3.2vw,14px); text-align:center }
     .info-table th{background:#f7f7f7; padding:6px; border-bottom:1px solid #ccc; width:40%; font-weight:700}
     .info-table td{padding:6px; border-bottom:1px solid #eee}
 
-    /* 테두리 규칙 */
     .border-red{border-color:var(--red)!important}
     .border-blue{border-color:var(--blue)!important}
     .border-gray{border-color:var(--gray)!important}
 
-    /* 모션 최소화 존중 */
     @media (prefers-reduced-motion:reduce){ .card{animation:none} }
     @keyframes flip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
 
-    /* 덱: 요청사항 — 카드와 같은 너비 + 오른쪽 패딩 */
-    .deck-container{
+    /* ===== 덱 섹션(헤더+그리드) : 메인 카드와 어울리게 업그레이드 ===== */
+    .deck-section{
       width:var(--contentW);
-      margin:16px auto 0;
+      margin:18px auto 8px;
+      background:#fff; border:4px solid #333; border-radius:16px;
+      box-shadow:0 0 12px rgba(0,0,0,.12);
+      padding:12px 12px 14px;
+      display:none; /* 처음엔 숨김 */
+    }
+    .deck-section.show{ display:block } /* 첫 카드가 뽑히면 표시 */
+
+    .deck-title{
+      font-size:clamp(16px,4vw,20px); margin:0 0 10px; font-weight:900; color:#1f1f1f;
+    }
+
+    /* 덱: 좌우 균등 패딩(섹션이 이미 padding을 가짐) */
+    .deck-container{
       display:grid; gap:10px;
       grid-template-columns:repeat(auto-fill,minmax(88px,1fr));
-      padding-right:12px;            /* 오른쪽 패딩 추가 */
-      box-sizing:border-box;         /* 패딩 포함해도 폭 유지 */
     }
     .deck-card{
-      padding:6px; border:3px solid #666; border-radius:8px; background:#fff;
-      display:flex; flex-direction:column; align-items:center; cursor:pointer
+      padding:6px; border:3px solid #666; border-radius:10px; background:#fff;
+      display:flex; flex-direction:column; align-items:center; cursor:pointer;
+      box-shadow:0 2px 6px rgba(0,0,0,.06);
+      transition:transform .15s ease, box-shadow .15s ease;
+    }
+    .deck-card:hover{
+      transform:translateY(-1px);
+      box-shadow:0 6px 14px rgba(0,0,0,.10);
     }
     .deck-card img{width:72px; height:72px; object-fit:contain}
     .deck-card-name{font-size:12px; margin-top:5px; text-transform:capitalize}
@@ -119,10 +138,10 @@
   </style>
 </head>
 <body>
-  <h1>포켓몬 카드 랜덤 뽑기</h1>
+  <h1>포켓몬 카드 뽑기</h1>
 
   <div id="controls">
-    <button id="draw-button">카드 뽑기</button>
+    <button id="draw-button" class="cta" aria-label="카드 뽑기">🎴 카드 뽑기!</button>
   </div>
 
   <div id="status">전체 목록 로딩 중… (잠시만 기다려 주세요)</div>
@@ -132,18 +151,21 @@
 
   <div id="card-slot"></div>
 
-  <h2 style="margin:14px auto 8px; font-size:clamp(18px,4.2vw,22px);">내 카드 덱</h2>
-  <div class="deck-container" id="deck-container"></div>
+  <!-- 덱 섹션: 처음엔 숨김, 첫 카드 뽑히면 .show 부여 -->
+  <section id="deck-section" class="deck-section" aria-hidden="true">
+    <h2 class="deck-title">내 카드 덱</h2>
+    <div class="deck-container" id="deck-container"></div>
+  </section>
 
 <script>
-  /* ===================== 설정/상태 ===================== */
+  /* =============== 설정/상태 =============== */
   const POKEMON_INDEX_START = 'https://pokeapi.co/api/v2/pokemon?limit=200&offset=0';
   const speciesAPI = 'https://pokeapi.co/api/v2/pokemon-species/';
   const FETCH_TIMEOUT_MS = 8000;
   const INDEX_FALLBACK_AFTER_MS = 6000;
 
   let isLoadingIndex = false;
-  let indexList = [];             // [{ name, url }]
+  let indexList = [];      // [{ name, url }]
   let nextIndexUrl = POKEMON_INDEX_START;
   let totalCount = null;
   let fallbackMode = false;
@@ -154,11 +176,11 @@
   const gradeMultiplier = { S: 1.00, A: 0.95, B: 0.90, C: 0.85 };
 
   const statNamesKor = {
-    hp: 'HP', attack: '공격', defense: '방어',
+    hp: '체력', attack: '공격', defense: '방어',
     'special-attack': '특수공격', 'special-defense': '특수방어', speed: '스피드'
   };
 
-  /* ===================== 유틸/헬퍼 ===================== */
+  /* =============== 유틸 =============== */
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   async function fetchJSON(url, retries = 2, backoffMs = 500) {
@@ -193,11 +215,6 @@
       return { ...s, value: Math.round(s.value * gradeMultiplier[g]), grade: g };
     });
   }
-  function isGoodPokemon(stats){
-    const atk = stats.find(s=>s.name==='attack')?.value || 0;
-    const spd = stats.find(s=>s.name==='speed')?.value || 0;
-    return atk > 100 || spd > 100;
-  }
   function countGrades(stats){ let s=0, a=0; for (const st of stats){ if (st.grade==='S') s++; else if (st.grade==='A') a++; } return { s, a }; }
   function borderClassByGrades(stats){
     const { s, a } = countGrades(stats);
@@ -206,7 +223,7 @@
     return 'border-gray';
   }
 
-  /* 고유 코드 생성: #5H22 같은 4자리 (O/0, I/1 등 혼동 문자 제외) */
+  /* 고유 코드 생성: #5H22 형태 4자리 (혼동문자 제외) */
   function genCode(n = 4){
     const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
     let out = '';
@@ -214,7 +231,7 @@
     return out;
   }
 
-  /* ===================== 폴백 인덱스 ===================== */
+  /* =============== 폴백 인덱스 =============== */
   function buildFallbackIndex(maxId = 1025){
     const arr = [];
     for(let id=1; id<=maxId; id++){
@@ -223,7 +240,7 @@
     return arr;
   }
 
-  /* ===================== 전체 인덱스 자동 로딩 (+폴백) ===================== */
+  /* =============== 전체 인덱스 로딩(+폴백) =============== */
   async function loadIndexAll(){
     if (!nextIndexUrl || isLoadingIndex) return;
     isLoadingIndex = true;
@@ -283,7 +300,7 @@
     }
   }
 
-  /* ===================== 상세 로딩 + 캐시 ===================== */
+  /* =============== 상세 로딩 + 캐시 =============== */
   async function getPokemonDetail(urlOrName){
     if (cache.has(urlOrName)) return cache.get(urlOrName);
 
@@ -316,13 +333,16 @@
     return obj;
   }
 
-  /* ===================== 렌더링 ===================== */
+  /* =============== 렌더링 =============== */
   function renderCard(p){
     const statsToUse = p.gradedStats || p.stats;
     const borderCls = borderClassByGrades(statsToUse);
     const cls = `card ${borderCls}`;
     const badgeHTML = p.types.map(t=>`<span class="type-badge type-${t}">${t}</span>`).join(' ');
-
+    const statNamesKor = {
+      hp: 'HP', attack: '공격', defense: '방어',
+      'special-attack': '특수공격', 'special-defense': '특수방어', speed: '스피드'
+    };
     const rows = statsToUse.map(s=>{
       const gradeHTML = s.grade ? ` <span class="grade ${s.grade==='S' ? 'grade-S' : ''}">(${s.grade})</span>` : '';
       return `<tr><th>${statNamesKor[s.name]}</th><td>${s.value}${gradeHTML}</td></tr>`;
@@ -341,7 +361,7 @@
     `;
   }
 
-  /* ===================== “뾰로롱” 웹오디오 ===================== */
+  /* =============== “뾰로롱” 웹오디오 =============== */
   let audioCtx = null;
   function playChime(){
     try{
@@ -365,7 +385,7 @@
     }catch(_){}
   }
 
-  /* ===================== 이벤트 ===================== */
+  /* =============== 이벤트 =============== */
   const drawBtn = document.getElementById('draw-button');
   drawBtn.addEventListener('click', async ()=>{
     if (!indexList.length) {
@@ -380,12 +400,28 @@
     setStatus('상세 로딩 중…');
     try{
       const pick = await getPokemonDetail(meta.url);
-      if (!pick.gradedStats) pick.gradedStats = applyGrades(pick.stats);
+      if (!pick.gradedStats) pick.gradedStats = (function(stats){
+        const gradeMultiplier = { S:1.00, A:0.95, B:0.90, C:0.85 };
+        const gradeWeights    = { S:20, A:35, B:30, C:15 };
+        const rpick = () => {
+          const r = Math.random()*100; let acc=0;
+          for(const [g,w] of Object.entries(gradeWeights)){acc+=w;if(r<acc)return g;}
+          return 'C';
+        };
+        return stats.map(s=>{ const g=rpick(); return { ...s, value:Math.round(s.value*gradeMultiplier[g]), grade:g }; });
+      })(pick.stats);
 
       playChime();
       document.getElementById('card-slot').innerHTML = renderCard(pick);
 
-      // 덱 썸네일
+      // 덱 섹션 표시(첫 카드 때만 show 클래스 부여)
+      const deckSection = document.getElementById('deck-section');
+      if (!deckSection.classList.contains('show')){
+        deckSection.classList.add('show');
+        deckSection.setAttribute('aria-hidden','false');
+      }
+
+      // 덱 썸네일 추가
       const deck = document.getElementById('deck-container');
       const div = document.createElement('div');
       div.className = 'deck-card';
@@ -400,17 +436,15 @@
 
       // 고유번호 4자리 생성 후 상태에 표시
       const uniq = genCode(4);
-      setStatus(`고유번호 : #${uniq}`);
+      setStatus(`뽑기 완료! #${uniq} (인덱스 ${indexList.length}${totalCount?'/'+totalCount:''})`);
     }catch(e){
       console.error(e);
       setStatus('상세 로딩 실패 (네트워크/레이트 리밋 가능). 다른 카드를 시도해 보세요.');
     }
   });
 
-  /* ===================== 초기 구동 ===================== */
-  (async function init(){
-    await loadIndexAll();
-  })();
+  /* =============== 초기 구동 =============== */
+  (async function init(){ await loadIndexAll(); })();
 </script>
 </body>
 </html>
