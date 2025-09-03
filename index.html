@@ -9,12 +9,14 @@
       --primary:#ffca3a; --primaryHover:#eaaa00;
       --red:#e03131; --blue:#1c7ed6; --gray:#868e96;
       --text:#222; --muted:#555; --bg:#eef7ff; --card:#fff;
+      /* 카드/덱 공통 폭(요청사항: 위 카드가 오픈되는 너비와 덱을 일치) */
+      --contentW:min(320px,85vw);
     }
     html,body{height:100%}
     body{
       font-family:'Segoe UI',system-ui,-apple-system,Apple SD Gothic Neo,맑은 고딕,sans-serif;
       color:var(--text); background:var(--bg); margin:0; padding:16px;
-      text-align:center; /* 텍스트 기본 가운데 정렬 */
+      text-align:center;
       -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
     h1{color:#d62828; font-size:clamp(20px,4.5vw,28px); margin:6px 0 14px; text-align:center}
@@ -47,10 +49,10 @@
       transition:width .25s ease
     }
 
-    /* 카드 (모바일에서 버튼보다 커 보이지 않게 폭 10% 축소) */
+    /* 카드 (요청: 덱과 같은 폭) */
     .card{
-      width:min(320px,85vw);
-      margin:16px auto; padding:14px 18px 16px; /* 좌우 패딩으로 시인성 개선 */
+      width:var(--contentW);
+      margin:16px auto; padding:14px 18px 16px;
       border:4px solid #333; border-radius:16px; background:var(--card);
       box-shadow:0 0 15px rgba(0,0,0,.2); animation:flip .6s ease-in-out;
       text-align:center;
@@ -78,7 +80,7 @@
     .type-ghost{background:#705898}.type-steel{background:#b8b8d0;color:#000}
     .type-fairy{background:#f0b6bc;color:#000}.type-normal{background:#a8a878}
 
-    /* 정보 테이블 (가운데 정렬 + 모바일 폰트) */
+    /* 정보 테이블 */
     table.info-table{
       width:100%; border-collapse:collapse; margin:8px auto 0;
       font-size:clamp(12px,3.2vw,14px); text-align:center
@@ -95,11 +97,14 @@
     @media (prefers-reduced-motion:reduce){ .card{animation:none} }
     @keyframes flip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
 
-    /* 덱: 반응형 그리드 */
+    /* 덱: 요청사항 — 카드와 같은 너비 + 오른쪽 패딩 */
     .deck-container{
-      display:grid; gap:10px; margin:16px auto 0;
+      width:var(--contentW);
+      margin:16px auto 0;
+      display:grid; gap:10px;
       grid-template-columns:repeat(auto-fill,minmax(88px,1fr));
-      width:min(760px,96vw)
+      padding-right:12px;            /* 오른쪽 패딩 추가 */
+      box-sizing:border-box;         /* 패딩 포함해도 폭 유지 */
     }
     .deck-card{
       padding:6px; border:3px solid #666; border-radius:8px; background:#fff;
@@ -134,13 +139,16 @@
   /* ===================== 설정/상태 ===================== */
   const POKEMON_INDEX_START = 'https://pokeapi.co/api/v2/pokemon?limit=200&offset=0';
   const speciesAPI = 'https://pokeapi.co/api/v2/pokemon-species/';
+  const FETCH_TIMEOUT_MS = 8000;
+  const INDEX_FALLBACK_AFTER_MS = 6000;
 
   let isLoadingIndex = false;
   let indexList = [];             // [{ name, url }]
   let nextIndexUrl = POKEMON_INDEX_START;
   let totalCount = null;
+  let fallbackMode = false;
 
-  const cache = new Map();        // 상세 캐시: key -> detail object
+  const cache = new Map();
 
   const gradeWeights    = { S: 20, A: 35, B: 30, C: 15 };
   const gradeMultiplier = { S: 1.00, A: 0.95, B: 0.90, C: 0.85 };
@@ -152,13 +160,18 @@
 
   /* ===================== 유틸/헬퍼 ===================== */
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  async function fetchJSON(url, retries = 3, backoffMs = 500) {
+
+  async function fetchJSON(url, retries = 2, backoffMs = 500) {
     for (let i = 0; i <= retries; i++) {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(t);
         if (!res.ok) throw new Error('HTTP ' + res.status);
         return await res.json();
       } catch (e) {
+        clearTimeout(t);
         if (i === retries) throw e;
         await sleep(backoffMs * (i + 1));
       }
@@ -193,41 +206,84 @@
     return 'border-gray';
   }
 
-  /* ===================== 전체 인덱스 자동 로딩 ===================== */
+  /* 고유 코드 생성: #5H22 같은 4자리 (O/0, I/1 등 혼동 문자 제외) */
+  function genCode(n = 4){
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    let out = '';
+    for (let i=0;i<n;i++) out += chars[Math.floor(Math.random()*chars.length)];
+    return out;
+  }
+
+  /* ===================== 폴백 인덱스 ===================== */
+  function buildFallbackIndex(maxId = 1025){
+    const arr = [];
+    for(let id=1; id<=maxId; id++){
+      arr.push({ name: String(id), url: `https://pokeapi.co/api/v2/pokemon/${id}` });
+    }
+    return arr;
+  }
+
+  /* ===================== 전체 인덱스 자동 로딩 (+폴백) ===================== */
   async function loadIndexAll(){
     if (!nextIndexUrl || isLoadingIndex) return;
     isLoadingIndex = true;
     toggleProgress(true);
     setStatus('전체 목록 로딩 중… (잠시만 기다려 주세요)');
 
+    const fbTimer = setTimeout(()=>{
+      if (!indexList.length) {
+        fallbackMode = true;
+        indexList = buildFallbackIndex();
+        totalCount = indexList.length;
+        setProgress(30);
+        setStatus('빠른 시작 모드로 전환: 인덱스가 느려서 ID 기반으로 바로 뽑을 수 있어요.');
+      }
+    }, INDEX_FALLBACK_AFTER_MS);
+
     try{
       while (nextIndexUrl) {
         const page = await fetchJSON(nextIndexUrl);
         totalCount ??= page.count || 0;
 
-        indexList.push(...page.results);     // name, url 만 저장
+        if (fallbackMode && page?.results?.length) {
+          fallbackMode = false;
+          indexList = [];
+          setStatus('정식 인덱스 연결됨. 데이터 정확도를 높이는 중…');
+        }
+
+        indexList.push(...page.results);
         nextIndexUrl = page.next;
 
         const pct = totalCount ? Math.round((indexList.length / totalCount) * 100) : 0;
         setStatus(`전체 목록 로딩 중… ${indexList.length}/${totalCount || '?'} (${pct}%)`);
         setProgress(pct);
 
-        if (nextIndexUrl) await sleep(150);  // API 부담 완화
+        if (nextIndexUrl) await sleep(150);
       }
 
+      clearTimeout(fbTimer);
       setStatus(`목록 로딩 완료! 총 ${indexList.length}마리`);
       setProgress(100);
       toggleProgress(false);
     }catch(e){
+      clearTimeout(fbTimer);
       console.error(e);
-      setStatus('목록 로딩 실패 (네트워크/레이트 리밋 가능). 새로고침 후 다시 시도해 주세요.');
-      toggleProgress(false);
+      if (!indexList.length){
+        fallbackMode = true;
+        indexList = buildFallbackIndex();
+        totalCount = indexList.length;
+        setStatus('인덱스 로딩 실패 → 빠른 시작 모드로 계속합니다.');
+        toggleProgress(false);
+      }else{
+        setStatus('일부 인덱스 로딩 실패 (네트워크/레이트 리밋 가능). 계속 사용 가능합니다.');
+        toggleProgress(false);
+      }
     }finally{
       isLoadingIndex = false;
     }
   }
 
-  /* ===================== 상세 로딩(한 마리) + 캐시 ===================== */
+  /* ===================== 상세 로딩 + 캐시 ===================== */
   async function getPokemonDetail(urlOrName){
     if (cache.has(urlOrName)) return cache.get(urlOrName);
 
@@ -242,7 +298,6 @@
     const stats  = info.stats.map(s=>({ name:s.stat.name, value:s.base_stat }));
     const flavor = (species.flavor_text_entries.find(e=>e.language.name==='ko')?.flavor_text || '').replace(/\n|\f/g,' ');
 
-    // 썸네일: 가벼운 것 우선 / 상세: 고화질 우선
     const thumb =
       info.sprites.front_default ||
       info.sprites.other?.dream_world?.front_default ||
@@ -254,7 +309,6 @@
       thumb;
 
     const obj = { id: info.id, nameKo, image, thumb, types, stats, flavor };
-    // 여러 키로 캐시
     cache.set(urlOrName, obj);
     cache.set(info.name, obj);
     cache.set(info.id, obj);
@@ -265,9 +319,8 @@
   /* ===================== 렌더링 ===================== */
   function renderCard(p){
     const statsToUse = p.gradedStats || p.stats;
-    const good = isGoodPokemon(statsToUse);
     const borderCls = borderClassByGrades(statsToUse);
-    const cls = `card ${borderCls} ${good ? 'rarity-good' : ''}`;
+    const cls = `card ${borderCls}`;
     const badgeHTML = p.types.map(t=>`<span class="type-badge type-${t}">${t}</span>`).join(' ');
 
     const rows = statsToUse.map(s=>{
@@ -288,43 +341,41 @@
     `;
   }
 
-  /* ===================== “뾰로롱” 웹오디오 효과음 ===================== */
+  /* ===================== “뾰로롱” 웹오디오 ===================== */
   let audioCtx = null;
   function playChime(){
     try{
       if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const ctx = audioCtx;
       const now = ctx.currentTime;
-      const freqs = [880, 1175, 1568]; // 밝은 3음
-
+      const freqs = [880, 1175, 1568];
       freqs.forEach((f, i)=>{
         const o = ctx.createOscillator();
         const g = ctx.createGain();
         o.type = 'sine';
         o.frequency.setValueAtTime(f*0.9, now + i*0.04);
         o.frequency.exponentialRampToValueAtTime(f*1.1, now + i*0.04 + 0.25);
-
         g.gain.setValueAtTime(0.0001, now + i*0.04);
         g.gain.exponentialRampToValueAtTime(0.25, now + i*0.04 + 0.03);
         g.gain.exponentialRampToValueAtTime(0.0001, now + i*0.04 + 0.28);
-
         o.connect(g).connect(ctx.destination);
         o.start(now + i*0.04);
         o.stop(now + i*0.04 + 0.3);
       });
-    }catch(_){/* 오디오 불가 환경 무시 */}
+    }catch(_){}
   }
 
   /* ===================== 이벤트 ===================== */
   const drawBtn = document.getElementById('draw-button');
   drawBtn.addEventListener('click', async ()=>{
-    // 로딩 중에 누르면 대기 안내
-    if (isLoadingIndex || !indexList.length){
-      alert('아직 전체 목록을 불러오는 중입니다. 잠시만 대기해 주세요!');
-      return;
+    if (!indexList.length) {
+      fallbackMode = true;
+      indexList = buildFallbackIndex();
+      totalCount = indexList.length;
+      setStatus('빠른 시작 모드: 인덱스 없이 바로 뽑기를 진행합니다.');
+      toggleProgress(false);
     }
 
-    // 인덱스에서 무작위 선택 → 상세 1마리 로드
     const meta = indexList[Math.floor(Math.random()*indexList.length)];
     setStatus('상세 로딩 중…');
     try{
@@ -332,10 +383,9 @@
       if (!pick.gradedStats) pick.gradedStats = applyGrades(pick.stats);
 
       playChime();
-
       document.getElementById('card-slot').innerHTML = renderCard(pick);
 
-      // 덱에 썸네일 추가
+      // 덱 썸네일
       const deck = document.getElementById('deck-container');
       const div = document.createElement('div');
       div.className = 'deck-card';
@@ -348,16 +398,18 @@
       });
       deck.appendChild(div);
 
-      setStatus(`뽑기 완료! (총 인덱스 ${indexList.length}/${totalCount || '?'})`);
+      // 고유번호 4자리 생성 후 상태에 표시
+      const uniq = genCode(4);
+      setStatus(`뽑기 완료! #${uniq} (인덱스 ${indexList.length}${totalCount?'/'+totalCount:''})`);
     }catch(e){
       console.error(e);
-      setStatus('상세 로딩 실패 (네트워크/레이트 리밋 가능)');
+      setStatus('상세 로딩 실패 (네트워크/레이트 리밋 가능). 다른 카드를 시도해 보세요.');
     }
   });
 
   /* ===================== 초기 구동 ===================== */
   (async function init(){
-    await loadIndexAll();   // 전체 인덱스 자동 로딩
+    await loadIndexAll();
   })();
 </script>
 </body>
