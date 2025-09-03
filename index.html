@@ -69,10 +69,15 @@
     /* 메인 카드 */
     .card{
       width:var(--contentW);
-      margin:16px auto; padding:14px 18px 16px;
-      border:4px solid #333; border-radius:16px; background:var(--card);
-      box-shadow:0 0 15px rgba(0,0,0,.2); animation:flip .6s ease-in-out;
+      margin:16px auto;
+      padding:14px 18px 16px;
+      border:4px solid #333;
+      border-radius:16px;
+      background:var(--card);
+      box-shadow:0 0 15px rgba(0,0,0,.2);
+      animation:flip .6s ease-in-out;
       text-align:center;
+      box-sizing:border-box; /* ✅ border와 padding 포함 */
     }
     .card img{ width:min(150px,55vw); max-width:100%; height:auto; display:block; margin:4px auto 6px }
     .card-name{ margin:8px 0; font-size:clamp(18px,4.5vw,22px); font-weight:800 }
@@ -104,10 +109,12 @@
       width:var(--contentW);
       margin:18px auto 8px;
       background:#fff;
-      border:4px solid #333; border-radius:16px;
+      border:4px solid #333;
+      border-radius:16px;
       box-shadow:0 0 12px rgba(0,0,0,.12);
-      /* 여기서는 padding 제거 */
+      padding:12px;              /* 안쪽 여백 */
       display:none;
+      box-sizing:border-box;      /* ✅ border와 padding 포함 */
     }
     .deck-section.show{ display:block }
     
