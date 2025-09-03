@@ -119,10 +119,10 @@
   </style>
 </head>
 <body>
-  <h1>포켓몬 카드 뽑기</h1>
+  <h1>포켓몬 카드 랜덤 뽑기</h1>
 
   <div id="controls">
-    <button id="draw-button">카드 뽑기!</button>
+    <button id="draw-button">카드 뽑기</button>
   </div>
 
   <div id="status">전체 목록 로딩 중… (잠시만 기다려 주세요)</div>
@@ -400,7 +400,7 @@
 
       // 고유번호 4자리 생성 후 상태에 표시
       const uniq = genCode(4);
-      setStatus(`뽑기 완료! #${uniq} (인덱스 ${indexList.length}${totalCount?'/'+totalCount:''})`);
+      setStatus(`고유번호 : #${uniq}`);
     }catch(e){
       console.error(e);
       setStatus('상세 로딩 실패 (네트워크/레이트 리밋 가능). 다른 카드를 시도해 보세요.');
