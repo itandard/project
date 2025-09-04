@@ -6,29 +6,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root{
-      /* 카드/덱 공통 바깥폭(테두리 포함 폭) */
       --contentW: min(320px, 85vw);
 
-      /* ✅ 기본 테마 색 지정 (body가 참조) */
-      --text: #1b1b1b;
-      --bg: #fafafa;
-      --muted: #5f6b7a;
+      /* 테마 */
+      --text:#1b1b1b; --bg:#fafafa; --muted:#5f6b7a;
+      --red:#d62828; --blue:#3a86ff; --gray:#333;
 
-      /* ✅ 보더 색 */
-      --red: #d62828;
-      --blue:#3a86ff;
-      --gray:#333;
+      /* 연출 파라미터 */
+      --flipDur: 6.5s;         /* ⏱ 플립 시간 (늘림) */
+      --sparkleDur: 3100ms;    /* ✨ 반짝이 시간 */
+      --sparkleCount: 70;      /* ✨ 기본 개수 */
     }
     html,body{height:100%}
     body{
       font-family:'Segoe UI',system-ui,-apple-system,Apple SD Gothic Neo,맑은 고딕,sans-serif;
-      color:var(--text); background:var(--bg); margin:0; padding:16px;
-      text-align:center;
+      color:var(--text); background:var(--bg); margin:0; padding:16px; text-align:center;
       -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
-    h1{color:#d62828; font-size:clamp(20px,4.5vw,28px); margin:6px 0 14px}
 
-    /* 컨트롤 - CTA 버튼 강화 */
+    /* 심플 & 세련 타이틀 */
+    h1.title{
+      font-size: clamp(28px, 6vw, 42px);
+      font-weight: 800;
+      margin: 10px 0 18px;
+      background: linear-gradient(90deg, #ffde59, #ff914d);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 1px 2px 4px rgba(0,0,0,0.25);
+      animation: fadeIn 1s ease;
+    }
+    @keyframes fadeIn { from {opacity:0; transform:translateY(-8px)} to {opacity:1; transform:translateY(0)} }
+
+    /* 컨트롤 */
     #controls{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
     .cta{
       --ring: rgba(255,202,58,.55);
@@ -36,60 +45,34 @@
       cursor:pointer; border:none; border-radius:14px;
       background:linear-gradient(180deg,#ffe066 0%, #ffca3a 55%, #eaaa00 100%);
       color:#2b2b2b; font-weight:900; letter-spacing:.3px;
-      box-shadow:
-        0 10px 22px rgba(255,170,0,.35),
-        0 2px 6px rgba(0,0,0,.08),
-        inset 0 1px 0 rgba(255,255,255,.7);
-      transform:translateY(0); transition:.2s ease;
-      position:relative; min-width:160px;
-      touch-action:manipulation;      /* 모바일 탭 지연 방지 */
+      box-shadow:0 10px 22px rgba(255,170,0,.35), 0 2px 6px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.7);
+      transform:translateY(0); transition:.2s ease; position:relative; min-width:160px; touch-action:manipulation;
     }
     .cta[disabled]{ opacity:.6; cursor:not-allowed; }
-    .cta::after{
-      content:""; position:absolute; inset:0; border-radius:inherit;
-      background:linear-gradient(180deg,rgba(255,255,255,.6),transparent 40%);
-      pointer-events:none; mix-blend-mode:soft-light;
-    }
-    .cta:hover{ transform:translateY(-1px); box-shadow:
-        0 16px 34px rgba(255,170,0,.45),
-        0 2px 10px rgba(0,0,0,.10),
-        inset 0 1px 0 rgba(255,255,255,.85); }
+    .cta::after{ content:""; position:absolute; inset:0; border-radius:inherit; background:linear-gradient(180deg,rgba(255,255,255,.6),transparent 40%); pointer-events:none; mix-blend-mode:soft-light; }
+    .cta:hover{ transform:translateY(-1px); box-shadow:0 16px 34px rgba(255,170,0,.45), 0 2px 10px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.85); }
     .cta:active{ transform:translateY(0); filter:saturate(1.05) }
-    .cta:focus-visible{
-      outline:none; box-shadow:
-        0 0 0 4px var(--ring),
-        0 10px 22px rgba(255,170,0,.35),
-        inset 0 1px 0 rgba(255,255,255,.85);
-    }
+    .cta:focus-visible{ outline:none; box-shadow:0 0 0 4px var(--ring), 0 10px 22px rgba(255,170,0,.35), inset 0 1px 0 rgba(255,255,255,.85); }
     @media (max-width:480px){ .cta{flex:1 1 100%; min-width:unset} }
 
-    /* 상태 + 진행바 */
+    /* 상태/프로그레스 */
     #status{margin-top:8px; color:var(--muted); font-size:clamp(12px,3.2vw,14px)}
     .progress-wrap{
       width:min(560px,92vw); height:14px; margin:10px auto 18px;
-      border-radius:10px; background:#dfe9f3; border:1px solid #b8c3ce; overflow:hidden;
-      box-shadow:inset 0 1px 2px rgba(0,0,0,.08)
+      border-radius:10px; background:#dfe9f3; border:1px solid #b8c3ce; overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.08)
     }
-    .progress-fill{
-      height:100%; width:0%;
-      background:linear-gradient(90deg,#69db7c,#38d9a9 40%,#22b8cf 70%,#748ffc);
-      transition:width .25s ease
-    }
+    .progress-fill{ height:100%; width:0%; background:linear-gradient(90deg,#69db7c,#38d9a9 40%,#22b8cf 70%,#748ffc); transition:width .25s ease }
 
-    /* 메인 카드 */
+    /* 메인 카드(앞면) */
     .card{
       width:var(--contentW);
-      margin:16px auto;
-      padding:14px 18px 16px;
+      margin:16px auto; padding:14px 18px 16px;
       border:4px solid #333; border-radius:16px; background:#fff;
-      box-shadow:0 0 15px rgba(0,0,0,.2);
-      text-align:center;
-      box-sizing:border-box;              /* ✅ 테두리/패딩을 width에 포함 */
+      box-shadow:0 0 15px rgba(0,0,0,.2); text-align:center; box-sizing:border-box;
     }
     .card img{ width:min(150px,55vw); max-width:100%; height:auto; display:block; margin:4px auto 6px }
     .card-name{ margin:8px 0; font-size:clamp(18px,4.5vw,22px); font-weight:800 }
-    .type-badge{ display:inline-block; padding:3px 8px; margin:2px; border-radius:8px;
-      background:#ccc; color:#fff; font-weight:700; font-size:12px; text-transform:capitalize }
+    .type-badge{ display:inline-block; padding:3px 8px; margin:2px; border-radius:8px; background:#ccc; color:#fff; font-weight:700; font-size:12px; text-transform:capitalize }
     .type-fire{background:#f08030}.type-water{background:#6890f0}
     .type-grass{background:#78c850}.type-electric{background:#f8d030;color:#333}
     .type-ice{background:#98d8d8;color:#000}.type-fighting{background:#c03028}
@@ -99,8 +82,7 @@
     .type-bug{background:#a8b820}.type-dragon{background:#7038f8}
     .type-ghost{background:#705898}.type-steel{background:#b8b8d0;color:#000}
     .type-fairy{background:#f0b6bc;color:#000}.type-normal{background:#a8a878}
-    table.info-table{ width:100%; border-collapse:collapse; margin:8px auto 0;
-      font-size:clamp(12px,3.2vw,14px); text-align:center }
+    table.info-table{ width:100%; border-collapse:collapse; margin:8px auto 0; font-size:clamp(12px,3.2vw,14px); text-align:center }
     .info-table th{background:#f7f7f7; padding:6px; border-bottom:1px solid #ccc; width:40%; font-weight:700}
     .info-table td{padding:6px; border-bottom:1px solid #eee}
 
@@ -108,151 +90,207 @@
     .border-blue{border-color:var(--blue)!important}
     .border-gray{border-color:var(--gray)!important}
 
-    @media (prefers-reduced-motion:reduce){ .card{animation:none} }
-    @keyframes flip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
-
-    /* 덱 섹션: 카드와 똑같은 폭 */
+    /* 덱 섹션 */
     .deck-section{
-      width:var(--contentW);
-      margin:18px auto 8px;
+      width:var(--contentW); margin:18px auto 8px;
       border:4px solid #333; border-radius:16px; background:#fff;
-      box-shadow:0 0 12px rgba(0,0,0,.12);
-      box-sizing:border-box;              /* ✅ 테두리/패딩을 width에 포함 */
-      display:none;                       /* 첫 뽑기 전 숨김 */
+      box-shadow:0 0 12px rgba(0,0,0,.12); box-sizing:border-box; display:none;
     }
     .deck-section.show{ display:block }
-
-    /* 덱 내부 여백은 섹션이 아니라 안쪽 래퍼에서 처리 */
     .deck-inner{ padding:12px }
     .deck-title{ margin:0 0 10px; font-weight:900 }
-
-    .deck-container{
-      display:grid; gap:10px;
-      grid-template-columns:repeat(auto-fill, minmax(88px, 1fr));
-    }
+    .deck-container{ display:grid; gap:10px; grid-template-columns:repeat(auto-fill, minmax(88px, 1fr)); }
     .deck-card{
       padding:6px; border:3px solid #666; border-radius:10px; background:#fff;
       display:flex; flex-direction:column; align-items:center; cursor:pointer;
-      box-shadow:0 2px 6px rgba(0,0,0,.06);
-      transition:transform .15s ease, box-shadow .15s ease;
+      box-shadow:0 2px 6px rgba(0,0,0,.06); transition:transform .15s ease, box-shadow .15s ease;
     }
-    .deck-card:hover{
-      transform:translateY(-1px);
-      box-shadow:0 6px 14px rgba(0,0,0,.10);
-    }
+    .deck-card:hover{ transform:translateY(-1px); box-shadow:0 6px 14px rgba(0,0,0,.10); }
     .deck-card img{width:72px; height:72px; object-fit:contain}
     .deck-card-name{font-size:12px; margin-top:5px; text-transform:capitalize}
 
-    .grade{font-weight:700}
-    .grade-S{color:#d62828; font-weight:900}
+    /* 재보기(덱에서 선택) */
+    .card.replay{ background:#f9f9f9; border-color:#aaa }
 
-    .title {
-    font-size: clamp(28px, 6vw, 42px);
-    font-weight: 800;
-    margin: 10px 0 18px;
-    background: linear-gradient(90deg, #ffa159dc, #ff914d);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-
-    /* 은은한 그림자 한 겹만 */
-    text-shadow: 1px 2px 4px rgba(0,0,0,0.25);
-
-    /* 부드러운 등장 효과 */
-    animation: fadeIn 1s ease;
-    }
-
-    @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-8px); }
-    to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* 덱에서 다시 본 카드 스타일 */
-    .card.replay {
-    background: #c9c8c8;   /* 옅은 회색 배경 */
-    border-color: #676666;    /* 보더도 살짝 연하게 */
-    }
-
-    /* ========== Draw 연출용 3D 플립 & 스파클 ========== */
-    .card-wrap{
-    width: var(--contentW);
-    margin: 16px auto;
-    position: relative;
-    perspective: 1000px;
-    }
+    /* ====== Draw 연출: 3D 플립 & 스파클 ====== */
+    .card-slot{ min-height:0 } /* JS에서 동적 min-height 세팅 */
+    .card-wrap{ width:var(--contentW); margin:16px auto; position:relative; perspective:1000px; }
     .card-3d{
-    position: relative;
-    transform-style: preserve-3d;
-    transition: transform 1s cubic-bezier(.2,.7,.2,1);
+      position:relative; transform-style:preserve-3d;
+      transition: transform var(--flipDur) cubic-bezier(.19,.9,.22,1);
+      will-change: transform; contain: layout paint;
     }
-    /* 앞/뒤 면 */
-    .face{
-    position:absolute; inset:0; border-radius:16px; backface-visibility:hidden;
-    }
-    .face > .card{ margin:0; } /* 기존 .card가 안쪽에 들어오므로 외부 마진 제거 */
+    .face{ position:absolute; inset:0; border-radius:16px; backface-visibility:hidden; }
+    .face > .card{ margin:0 }      /* 앞면 카드 레이아웃 */
+    .face.front{ transform: rotateY(180deg) }  /* 앞면은 뒤집어 둠 */
+    .card-3d.is-flipped{ transform: rotateY(180deg) }
 
-    /* 앞면은 Y로 뒤집어 둠(부모가 돌아오며 정면 표시) */
-    .face.front{ transform: rotateY(180deg); }
-
-    /* 카드 뒷면(드로우 전 보여줄 면) */
+    /* 뒷면(간단 포켓볼풍) */
     .card-back{
+    /* 크기/레이어 */
     height:100%;
-    border:4px solid #333; border-radius:16px; box-sizing:border-box;
+    border:4px solid #111;               /* 포켓볼 테두리 */
+    border-radius:16px;
+    box-sizing:border-box;
+    position:relative;
+    overflow:hidden;
+    box-shadow:
+        0 2px 10px rgba(0,0,0,.25),
+        inset 0 2px 8px rgba(0,0,0,.15);
+
+    /* 파라미터(반응형) */
+    --bandH: clamp(14px, 3.5vw, 22px);   
+    --ringOuter: clamp(60px, 15vw, 92px);
+    --btn: calc(var(--ringOuter) * .72); /* ✅ 버튼 크기를 더 키움 */
+
+    /* 배경 레이어: 위 빨강 / 아래 흰색 + 중앙 검은 띠 + 상단 하이라이트 */
     background:
-        radial-gradient(circle at 50% 50%, rgba(255,255,255,.9) 0 28%, transparent 29%),
-        radial-gradient(circle at 50% 50%, #e63946 0 50%, transparent 51%),
-        radial-gradient(circle at 50% 50%, #1d3557 0 100%);
-    /* 간단 포켓볼 느낌 */
-    position: relative;
-    box-shadow:0 0 15px rgba(0,0,0,.2);
+        /* 상단 하이라이트(광택) */
+        radial-gradient(120% 80% at 50% -10%,
+        rgba(255,255,255,.55) 0%,
+        rgba(255,255,255,.20) 22%,
+        rgba(255,255,255,0) 48%) ,
+        /* 중앙 검은 띠 */
+        linear-gradient(to bottom,
+        transparent calc(50% - var(--bandH)/2),
+        #000 calc(50% - var(--bandH)/2) calc(50% + var(--bandH)/2),
+        transparent calc(50% + var(--bandH)/2)) ,
+        /* 위/아래 반반 색상 */
+        linear-gradient(to bottom, #e53935 0 50%, #ffffff 50% 100%);
     }
+    /* 포켓볼 중앙의 '검은 외곽 링' */
     .card-back::before{
-    content:"DR AW!"; letter-spacing:.2em;
-    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-    color:#fff; font-weight:900; font-size:clamp(16px,4.5vw,22px);
-    text-shadow:0 2px 6px rgba(0,0,0,.35);
+    content:"";
+    position:absolute; left:50%; top:50%;
+    transform: translate(-50%,-50%);
+    width: var(--ringOuter); height: var(--ringOuter);
+    border-radius:50%;
+    background:
+        radial-gradient(circle at 50% 50%,
+        rgba(0,0,0,.95) 45%,
+        rgba(0,0,0,.95) 60%,
+        rgba(0,0,0,0) 61% 100%);
+    /* 외곽 링의 볼륨감 */
+    box-shadow:
+        0 0 0 2px rgba(0,0,0,.85),               /* 진한 테두리 */
+        inset 0 2px 4px rgba(255,255,255,.25),   /* 내부 위쪽 하이라이트 */
+        inset 0 -2px 4px rgba(0,0,0,.35);        /* 내부 아래쪽 음영 */
+    z-index: 1;
     }
 
-    /* 플립 트리거 */
-    .card-3d.is-flipped{ transform: rotateY(180deg); }
+    /* 포켓볼 중앙 '하얀 버튼'(하이라이트/입체감 포함) */
+    .card-back::after{
+    content:"";
+    position:absolute; left:50%; top:50%;
+    transform: translate(-50%,-50%);
+    width: var(--btn); height: var(--btn);
+    border-radius:50%;
+    background:
+        /* 버튼 상단 하이라이트 */
+        radial-gradient(140% 100% at 50% 0%,
+        rgba(255,255,255,.95) 0%,
+        rgba(255,255,255,.75) 28%,
+        rgba(255,255,255,.0) 60%),
+        /* 버튼 본체 */
+        radial-gradient(circle at 50% 55%,
+        #fdfdfd 0%,
+        #f1f1f1 60%,
+        #e6e6e6 100%);
+    box-shadow:
+        0 0 0 2px #111,                       /* 버튼 외곽선(검은 테두리) */
+        inset 0 4px 8px rgba(255,255,255,.9), /* 위쪽 강한 하이라이트 */
+        inset 0 -4px 10px rgba(0,0,0,.25),    /* 아래쪽 음영 */
+        0 4px 10px rgba(0,0,0,.25);           /* 바깥 그림자(떠보이는 효과) */
+    z-index: 2;
+    }
 
-    /* 반짝이 FX 레이어 */
-    .fx-layer{ position:absolute; inset:-6px; pointer-events:none; overflow:visible; }
+    /* (선택) 살짝 살아있는 느낌: 아주 미세한 펄스 */
+    @media (prefers-reduced-motion: no-preference){
+    .card-back::after{
+        animation: btnPulse 2.6s ease-in-out infinite;
+    }
+    @keyframes btnPulse{
+        0%,100%{ transform: translate(-50%,-50%) scale(1); }
+        50%    { transform: translate(-50%,-50%) scale(1.03); }
+    }
+    }
+
+    /* 스파클 레이어 */
+    .fx-layer{ position:absolute; inset:-8px; pointer-events:none; overflow:visible; filter: drop-shadow(0 0 6px rgba(255,220,120,.75)); }
+    .fx-star,.fx-shard{
+      position:absolute; opacity:0; transform: translateZ(0) scale(.6); will-change: transform, opacity;
+    }
+    /* 별(원형 그라디언트) */
     .fx-star{
-    position:absolute; width:8px; height:8px; border-radius:50%;
-    background: radial-gradient(circle, #fff, #ffd166 45%, rgba(255,209,102,0) 70%);
-    opacity:0; transform: scale(.4) translate3d(0,0,0);
-    animation: sparkle 900ms ease-out forwards;
+      width: var(--sz,10px); height: var(--sz,10px); border-radius:50%;
+      background: radial-gradient(circle, #fff, #ffd166 48%, rgba(255,209,102,0) 70%);
+      animation: sparkle var(--sparkleDur, 1100ms) ease-out forwards;
     }
+    /* 샤드(빛조각) */
+    .fx-shard{
+      width: 2px; height: var(--len,16px); background: linear-gradient(#fff, #ffe08a);
+      border-radius: 1px; transform-origin: center bottom; animation: shard var(--sparkleDur, 1100ms) ease-out forwards;
+    }
+
     @keyframes sparkle{
-    0%{ opacity:0; transform:scale(.4) translateY(0); }
-    10%{ opacity:1; }
-    100%{ opacity:0; transform:scale(1.2) translateY(-20px); }
+      0%{ opacity:0; transform:translateY(6px) scale(.6) rotate(0deg) }
+      15%{ opacity:1 }
+      100%{ opacity:0; transform:translateY(-24px) scale(1.15) rotate(15deg) }
+    }
+    @keyframes shard{
+      0%{ opacity:0; transform:translateY(10px) rotate(var(--rot,0deg)) scaleY(.8) }
+      15%{ opacity:1 }
+      100%{ opacity:0; transform:translateY(-28px) rotate(calc(var(--rot,0deg) + 20deg)) scaleY(1.1) }
     }
 
-    /* 모션 민감 사용자 배려 */
     @media (prefers-reduced-motion: reduce){
-    .card-3d{ transition:none; transform:none!important; }
-    .fx-star{ animation:none; opacity:0; }
+      .card-3d{ transition:none; transform:none!important }
+      .fx-star,.fx-shard{ animation:none; opacity:0 }
     }
 
+    /* 능력치 등급 표시 */
+    .grade{ font-weight: 700; }
+    .grade-S{ color: #d62828; font-weight: 900; }
+
+    /* S급 능력치는 숫자 자체도 빨간색/굵게 */
+    .info-table td.s-grade{ color: #d62828; font-weight: 900; }
+
+    /* 덱에서 다시 본 카드(재보기) — 짙은 회색 배경 */
+    #card-slot .card.replay{
+    background: #e0e0e0 !important;  /* ← 짙은 회색 */
+    border-color: #9aa0a6 !important; /* 테두리도 조금 어둡게 */
+    box-shadow: 0 0 12px rgba(0,0,0,.15); /* 살짝 무게감 */
+    }
+
+    /* (선택) 재보기 뱃지 */
+    #card-slot .card.replay .card-name::after{
+    content: "재보기";
+    margin-left: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background: #4b5563;
+    color: #fff;
+    }
   </style>
 </head>
 <body>
-  <h1 class="title">포켓몬 카드 랜덤 뽑기</h1>
+  <h1 class="title">포켓몬 카드 뽑기</h1>
 
   <div id="controls">
     <button id="draw-button" class="cta" aria-label="카드 뽑기">🎴 카드 뽑기!</button>
   </div>
 
-  <!-- ✅ ARIA 라이브 리전 지정 -->
   <div id="status" role="status" aria-live="polite">전체 목록 로딩 중… (잠시만 기다려 주세요)</div>
   <div class="progress-wrap" id="progress-wrap" aria-hidden="false">
     <div class="progress-fill" id="progress-fill" style="width:0%"></div>
   </div>
 
-  <div id="card-slot"></div>
+  <!-- 카드 슬롯: 레이아웃 안정화 위해 min-height를 JS로 동적 세팅 -->
+  <div id="card-slot" class="card-slot"></div>
 
-  <!-- 덱 섹션: 처음엔 숨김, 첫 카드 뽑히면 .show 부여 -->
+  <!-- 덱 -->
   <section id="deck-section" class="deck-section" aria-hidden="true">
     <div class="deck-inner">
       <h2 class="deck-title">내가 뽑은 카드</h2>
@@ -268,13 +306,14 @@
   const INDEX_FALLBACK_AFTER_MS = 6000;
 
   let isLoadingIndex = false;
-  let indexList = [];      // [{ name, url }]
+  let indexList = [];
   let nextIndexUrl = POKEMON_INDEX_START;
   let totalCount = null;
   let fallbackMode = false;
 
   const cache = new Map();
 
+  /* 등급 */
   const gradeWeights    = { S: 20, A: 35, B: 30, C: 15 };
   const gradeMultiplier = { S: 1.00, A: 0.95, B: 0.90, C: 0.85 };
 
@@ -282,6 +321,11 @@
     hp: '체력', attack: '공격', defense: '방어',
     'special-attack': '특수공격', 'special-defense': '특수방어', speed: '스피드'
   };
+
+  /* 쿨다운 라벨/시간 */
+  const DRAWING_LABEL = '🎴 뽑는 중…';
+  const RESUME_LABEL  = '🎴 카드 뽑기!';
+  const COOLDOWN_MS   = 3000;
 
   /* =============== 유틸 =============== */
   const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -302,27 +346,6 @@
       }
     }
   }
-    const DRAWING_LABEL = '🎴 뽑는 중…';
-    const RESUME_LABEL  = '🎴 카드 뽑기!';
-    const COOLDOWN_MS = 3000; // 3초
-    function startCooldown(btn, ms = COOLDOWN_MS, resumeLabel = RESUME_LABEL){
-    const end = Date.now() + ms;
-    btn.setAttribute('disabled', 'true');
-
-    const tick = () => {
-        const left = end - Date.now();
-        if (left <= 0) {
-        btn.removeAttribute('disabled');
-        btn.textContent = resumeLabel;       // ✅ 쿨다운 끝나면 항상 이 라벨로 복구
-        return;
-        }
-        const sec = Math.ceil(left / 1000);
-        btn.textContent = `⏳ ${sec}초 대기 중…`;
-        requestAnimationFrame(tick);
-    };
-    tick();
-    }
-
   function setStatus(msg){ const el = document.getElementById('status'); if (el) el.textContent = msg; }
   function setProgress(pct){ const bar = document.getElementById('progress-fill'); if (bar) bar.style.width = Math.max(0,Math.min(100,pct))+'%'; }
   function toggleProgress(show){ const wrap = document.getElementById('progress-wrap'); if (wrap) wrap.style.display = show?'block':'none'; }
@@ -332,20 +355,13 @@
     for (const [g,w] of Object.entries(gradeWeights)){ acc += w; if (r < acc) return g; }
     return 'C';
   }
-  function applyGrades(stats){
-    return stats.map(s=>{
-      const g = pickGrade();
-      return { ...s, value: Math.round(s.value * gradeMultiplier[g]), grade: g };
-    });
-  }
-  function countGrades(stats){ let s=0, a=0; for (const st of stats){ if (st.grade==='S') s++; else if (st.grade==='A') a++; } return { s, a }; }
   function borderClassByGrades(stats){
-    const { s, a } = countGrades(stats);
+    let s=0, a=0;
+    for (const st of stats){ if (st.grade==='S') s++; else if (st.grade==='A') a++; }
     if (s >= 3) return 'border-red';
     if (s === 2 && a >= 1) return 'border-blue';
     return 'border-gray';
   }
-
   function genCode(n = 4){
     const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
     let out = '';
@@ -353,6 +369,82 @@
     return out;
   }
 
+  /* 쿨다운 */
+  function startCooldown(btn, ms = COOLDOWN_MS, resumeLabel = RESUME_LABEL){
+    const end = Date.now() + ms;
+    btn.setAttribute('disabled', 'true');
+    const tick = () => {
+      const left = end - Date.now();
+      if (left <= 0) {
+        btn.removeAttribute('disabled');
+        btn.textContent = resumeLabel;
+        return;
+      }
+      const sec = Math.ceil(left / 1000);
+      btn.textContent = `⏳ ${sec}초 대기 중…`;
+      requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  /* ========== Draw 연출 유틸 ========== */
+  /* 반짝이 생성 */
+  function addSparkles(target, count = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sparkleCount')) || 26){
+    if(!target) return;
+    const rect = target.getBoundingClientRect();
+    const mk = (cls, x, y, delay) => {
+      const el = document.createElement('span');
+      el.className = cls;
+      el.style.left = x + 'px';
+      el.style.top  = y + 'px';
+      el.style.animationDelay = delay + 'ms';
+      target.appendChild(el);
+      return el;
+    };
+    for(let i=0;i<count;i++){
+      const x = Math.random()*(rect.width-8);
+      const y = Math.random()*(rect.height-8) + 8;
+      const delay = Math.random()*220|0;
+
+      if (Math.random() < 0.65){
+        const s = mk('fx-star', x, y, delay);
+        s.style.setProperty('--sz', (8 + Math.random()*10) + 'px');
+      } else {
+        const sh = mk('fx-shard', x, y, delay);
+        sh.style.setProperty('--len', (12 + Math.random()*22) + 'px');
+        sh.style.setProperty('--rot', (Math.random()*60 - 30) + 'deg');
+      }
+      setTimeout(()=> target.firstChild && target.removeChild(target.firstChild), 1400); // 자연 정리
+    }
+  }
+  /* 플립 마크업 */
+  function renderFlipCardMarkup(frontHTML){
+    return `
+      <div class="card-wrap">
+        <div class="card-3d" id="card3d">
+          <div class="face back">
+            <div class="card-back" aria-hidden="true"></div>
+          </div>
+          <div class="face front">
+            ${frontHTML}
+          </div>
+        </div>
+        <div class="fx-layer"></div>
+      </div>
+    `;
+  }
+  /* 레이아웃 안정: 앞면 높이 미리 측정해 card-slot에 고정 */
+  function measureFrontHeight(frontHTML){
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;left:-9999px;top:-9999px;width:'+getComputedStyle(document.documentElement).getPropertyValue('--contentW');
+    probe.innerHTML = frontHTML;
+    document.body.appendChild(probe);
+    const h = probe.offsetHeight;
+    document.body.removeChild(probe);
+    return h;
+  }
+
+  /* =============== 인덱스 로딩 =============== */
   function buildFallbackIndex(maxId = 1025){
     const arr = [];
     for(let id=1; id<=maxId; id++){
@@ -361,42 +453,6 @@
     return arr;
   }
 
-  /* ========== Draw 연출 유틸 ========== */
-    /* 반짝이 생성: target은 .fx-layer 엘리먼트 */
-    function addSparkles(target, count = 14){
-    if(!target) return;
-    const rect = target.getBoundingClientRect();
-    for(let i=0;i<count;i++){
-        const s = document.createElement('span');
-        s.className = 'fx-star';
-        const x = Math.random()* (rect.width  - 8);
-        const y = Math.random()* (rect.height - 8) + 4;  // 약간 아래서 위로
-        s.style.left = `${x}px`;
-        s.style.top  = `${y}px`;
-        s.style.animationDelay = `${Math.random()*0.25}s`;
-        target.appendChild(s);
-        setTimeout(()=> s.remove(), 1000); // 정리
-    }
-    }
-
-    /* 카드 뒷면+앞면을 감싼 플립 마크업 생성 */
-    function renderFlipCardMarkup(frontHTML){
-    return `
-        <div class="card-wrap">
-        <div class="card-3d" id="card3d">
-            <div class="face back">
-            <div class="card-back" aria-hidden="true"></div>
-            </div>
-            <div class="face front">
-            ${frontHTML}
-            </div>
-        </div>
-        <div class="fx-layer"></div>
-        </div>
-    `;
-    }
-
-  /* =============== 전체 인덱스 로딩(+폴백) =============== */
   async function loadIndexAll(){
     if (!nextIndexUrl || isLoadingIndex) return;
     isLoadingIndex = true;
@@ -423,17 +479,14 @@
           indexList = [];
           setStatus('정식 인덱스 연결됨. 데이터 정확도를 높이는 중…');
         }
-
         indexList.push(...page.results);
         nextIndexUrl = page.next;
 
         const pct = totalCount ? Math.round((indexList.length / totalCount) * 100) : 0;
         setStatus(`전체 목록 로딩 중… ${indexList.length}/${totalCount || '?'} (${pct}%)`);
         setProgress(pct);
-
         if (nextIndexUrl) await sleep(150);
       }
-
       clearTimeout(fbTimer);
       setStatus(`목록 로딩 완료! 총 ${indexList.length}마리`);
       setProgress(100);
@@ -446,11 +499,10 @@
         indexList = buildFallbackIndex();
         totalCount = indexList.length;
         setStatus('인덱스 로딩 실패 → 빠른 시작 모드로 계속합니다.');
-        toggleProgress(false);
       }else{
         setStatus('일부 인덱스 로딩 실패 (네트워크/레이트 리밋 가능). 계속 사용 가능합니다.');
-        toggleProgress(false);
       }
+      toggleProgress(false);
     }finally{
       isLoadingIndex = false;
     }
@@ -468,10 +520,12 @@
 
     const nameKo = species?.names?.find(n=>n.language.name==='ko')?.name || info.name || '이름 없음';
     const types  = (info.types || []).map(t=>t.type.name);
-    const stats  = (info.stats || []).map(s=>({ name:s.stat.name, value:s.base_stat }));
+    const stats  = (info.stats || []).map(s=>{
+      const g = pickGrade();
+      return { name:s.stat.name, value: Math.round(s.base_stat * ( {S:1.00,A:0.95,B:0.90,C:0.85}[g] )), grade:g };
+    });
     const flavor = (species?.flavor_text_entries?.find(e=>e.language.name==='ko')?.flavor_text || '')
-                    .replace(/\n|\f/g,' ')
-                    || '설명이 없습니다.';
+                    .replace(/\n|\f/g,' ') || '설명이 없습니다.';
 
     const thumb =
       info.sprites?.front_default ||
@@ -480,8 +534,7 @@
       info.sprites?.other?.['official-artwork']?.front_default || '';
     const image =
       info.sprites?.other?.['official-artwork']?.front_default ||
-      info.sprites?.other?.home?.front_default ||
-      thumb;
+      info.sprites?.other?.home?.front_default || thumb;
 
     const obj = { id: info.id, nameKo, image, thumb, types, stats, flavor };
     cache.set(urlOrName, obj);
@@ -491,19 +544,16 @@
     return obj;
   }
 
-  /* =============== 렌더링 =============== */
+  /* =============== 렌더링 (앞면) =============== */
   function renderCard(p){
-    const statsToUse = p.gradedStats || p.stats;
-    const borderCls = borderClassByGrades(statsToUse);
-    const cls = `card ${borderCls}`;
+    const borderCls = borderClassByGrades(p.stats || []);
     const badgeHTML = (p.types||[]).map(t=>`<span class="type-badge type-${t}">${t}</span>`).join(' ');
-    const rows = statsToUse.map(s=>{
-      const gradeHTML = s.grade ? ` <span class="grade ${s.grade==='S' ? 'grade-S' : ''}">(${s.grade})</span>` : '';
-      return `<tr><th>${statNamesKor[s.name] || s.name}</th><td>${s.value}${gradeHTML}</td></tr>`;
+    const rows = (p.stats||[]).map(s=>{
+      const isS = s.grade==='S';
+      return `<tr><th>${statNamesKor[s.name] || s.name}</th><td>${s.value} ${s.grade ? `<span class="grade ${isS?'grade-S':''}">(${s.grade})</span>`:''}</td></tr>`;
     }).join('');
-
     return `
-      <div class="${cls}">
+      <div class="card ${borderCls}">
         <img src="${p.image}" alt="${p.nameKo}" loading="eager" decoding="async">
         <div class="card-name">${p.nameKo} (#${p.id})</div>
         <div style="margin-bottom:6px;">${badgeHTML || ''}</div>
@@ -515,26 +565,22 @@
     `;
   }
 
-  /* =============== “뾰로롱” 웹오디오 =============== */
+  /* =============== 사운드(뾰로롱) =============== */
   let audioCtx = null;
   function playChime(){
     try{
       if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const ctx = audioCtx;
-      const now = ctx.currentTime;
-      const freqs = [880, 1175, 1568];
+      const ctx = audioCtx, now = ctx.currentTime, freqs=[880,1175,1568];
       freqs.forEach((f, i)=>{
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
+        const o = ctx.createOscillator(), g = ctx.createGain();
         o.type = 'sine';
-        o.frequency.setValueAtTime(f*0.9, now + i*0.04);
-        o.frequency.exponentialRampToValueAtTime(f*1.1, now + i*0.04 + 0.25);
-        g.gain.setValueAtTime(0.0001, now + i*0.04);
-        g.gain.exponentialRampToValueAtTime(0.25, now + i*0.04 + 0.03);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + i*0.04 + 0.28);
+        o.frequency.setValueAtTime(f*0.9, now + i*0.05);
+        o.frequency.exponentialRampToValueAtTime(f*1.1, now + i*0.05 + 0.32);
+        g.gain.setValueAtTime(0.0001, now + i*0.05);
+        g.gain.exponentialRampToValueAtTime(0.26, now + i*0.05 + 0.04);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + i*0.05 + 0.36);
         o.connect(g).connect(ctx.destination);
-        o.start(now + i*0.04);
-        o.stop(now + i*0.04 + 0.3);
+        o.start(now + i*0.05); o.stop(now + i*0.05 + 0.38);
       });
     }catch(_){}
   }
@@ -544,13 +590,9 @@
   let isDrawing = false;
 
   drawBtn.addEventListener('click', async ()=>{
-    if (isDrawing) return;                 // ✅ 연속 클릭 방지
+    if (isDrawing) return;
     isDrawing = true;
-    // ✅ 클릭 직후 라벨은 고정 상수로
     drawBtn.textContent = DRAWING_LABEL;
-    drawBtn.setAttribute('disabled', 'true');
-    const oldLabel = drawBtn.textContent;
-    drawBtn.textContent = '🎴 뽑는 중…';
     drawBtn.setAttribute('disabled', 'true');
 
     if (!indexList.length) {
@@ -563,84 +605,74 @@
 
     const meta = indexList[Math.floor(Math.random()*indexList.length)];
     setStatus('상세 로딩 중…');
-
     try{
       const pick = await getPokemonDetail(meta.url || meta.name);
 
-      // ✅ 이미지 프리로드로 깜빡임 감소
+      // 이미지 프리로드 (깜빡임 감소)
       if (pick.image) {
-        const pre = new Image();
-        pre.src = pick.image;
+        const pre = new Image(); pre.src = pick.image;
         try { await pre.decode?.(); } catch(_) {}
       }
 
-      if (!pick.gradedStats) pick.gradedStats = (function(stats){
-        const gradeMultiplier = { S:1.00, A:0.95, B:0.90, C:0.85 };
-        const gradeWeights    = { S:20, A:35, B:30, C:15 };
-        const rpick = () => {
-          const r = Math.random()*100; let acc=0;
-          for(const [g,w] of Object.entries(gradeWeights)){acc+=w;if(r<acc)return g;}
-          return 'C';
-        };
-        return (stats||[]).map(s=>{ const g=rpick(); return { ...s, value:Math.round(s.value*gradeMultiplier[g]), grade:g }; });
-      })(pick.stats || []);
-
       playChime();
+
       const slot = document.getElementById('card-slot');
 
-        /* 1) 앞면 HTML을 만들고 */
-        const frontHTML = renderCard(pick);
+      // 1) 앞면 HTML 생성 & 높이 측정 → 레이아웃 고정
+      const frontHTML = renderCard(pick);
+      const h = measureFrontHeight(frontHTML);
+      slot.style.minHeight = h + 'px';
 
-        /* 2) 플립 컨테이너 마크업으로 감싸서 넣고 */
-        slot.innerHTML = renderFlipCardMarkup(frontHTML);
+      // 2) 플립 마크업 주입
+      slot.innerHTML = renderFlipCardMarkup(frontHTML);
+      
+      // 3) 반짝이 강화
+      addSparkles(slot.querySelector('.fx-layer'));
 
-        /* 3) 반짝이 효과 뿌리고 */
-        addSparkles(slot.querySelector('.fx-layer'), 16);
+      // 4) 다음 프레임에 플립 트리거(뒤→앞, 1.5s)
+      const card3d = slot.querySelector('#card3d');
+      card3d.style.height = h + 'px';
+      requestAnimationFrame(()=> card3d.classList.add('is-flipped'));
 
-        /* 4) 다음 프레임에 플립 트리거(1초) */
-        const card3d = slot.querySelector('#card3d');
-        requestAnimationFrame(()=>{
-        card3d.classList.add('is-flipped'); // 1s 동안 뒤→앞
-        });
-
-      // 덱 섹션 표시(첫 카드 때만 show 클래스 부여)
+      // 덱 섹션 표시 & 썸네일 추가
       const deckSection = document.getElementById('deck-section');
       if (!deckSection.classList.contains('show')){
         deckSection.classList.add('show');
         deckSection.setAttribute('aria-hidden','false');
       }
-
-      // 덱 썸네일 추가
       const deck = document.getElementById('deck-container');
       const div = document.createElement('div');
       div.className = 'deck-card';
-      div.innerHTML = `
-        <img src="${pick.thumb || pick.image}" alt="" loading="lazy" decoding="async">
-        <div class="deck-card-name">${pick.nameKo}</div>`;
-      div.addEventListener('click', ()=>{
-        const slot = document.getElementById('card-slot');
-        slot.innerHTML = renderCard(pick);
-        // 방금 렌더링한 카드에 replay 클래스 부여
-        const cardEl = slot.querySelector('.card');
-        if (cardEl) cardEl.classList.add('replay');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+      div.innerHTML = `<img src="${pick.thumb || pick.image}" alt="" loading="lazy" decoding="async"><div class="deck-card-name">${pick.nameKo}</div>`;
+      div.addEventListener('click', ()=>{        
+      const slot = document.getElementById('card-slot');
+      slot.classList.remove('is-replay');     // 슬롯 플래그 제거
+      slot.innerHTML = '';                    // 내용 초기화 (선택)
+
+      // 재보기는 플립 없이, 앞면만 곧장 렌더
+      slot.style.minHeight = '';            // 고정 해제
+      slot.innerHTML = renderCard(pick);
+      const cardEl = slot.querySelector('.card');
+      if (cardEl) cardEl.classList.add('replay');  // ← 짙은 회색 적용 포인트
+      // (선택) 슬롯 상태 플래그
+      slot.classList.add('is-replay');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       });
       deck.appendChild(div);
-
-      // 고유번호 4자리 생성 후 상태에 표시
+      
+      // 고유번호 상태
       const uniq = genCode(4);
       setStatus(`고유번호 : #${uniq}`);
     }catch(e){
       console.error(e);
-        setStatus('상세 로딩 실패 (네트워크/레이트 리밋 가능). 다른 카드를 시도해 보세요.');
+      setStatus('상세 로딩 실패 (네트워크/레이트 리밋 가능). 다른 카드를 시도해 보세요.');
     } finally {
-        isDrawing = false;
-        // ✅ 쿨다운 끝나면 무조건 RESUME_LABEL 로 돌아가게
-        startCooldown(drawBtn, COOLDOWN_MS, RESUME_LABEL);
+      isDrawing = false;
+      startCooldown(drawBtn, COOLDOWN_MS, RESUME_LABEL);
     }
   });
 
-  /* =============== 초기 구동 =============== */
+  /* =============== 초기 =============== */
   (async function init(){ await loadIndexAll(); })();
 </script>
 </body>
