@@ -586,7 +586,22 @@
       })(pick.stats || []);
 
       playChime();
-      document.getElementById('card-slot').innerHTML = renderCard(pick);
+      const slot = document.getElementById('card-slot');
+
+        /* 1) 앞면 HTML을 만들고 */
+        const frontHTML = renderCard(pick);
+
+        /* 2) 플립 컨테이너 마크업으로 감싸서 넣고 */
+        slot.innerHTML = renderFlipCardMarkup(frontHTML);
+
+        /* 3) 반짝이 효과 뿌리고 */
+        addSparkles(slot.querySelector('.fx-layer'), 16);
+
+        /* 4) 다음 프레임에 플립 트리거(1초) */
+        const card3d = slot.querySelector('#card3d');
+        requestAnimationFrame(()=>{
+        card3d.classList.add('is-flipped'); // 1s 동안 뒤→앞
+        });
 
       // 덱 섹션 표시(첫 카드 때만 show 클래스 부여)
       const deckSection = document.getElementById('deck-section');
@@ -608,7 +623,6 @@
         // 방금 렌더링한 카드에 replay 클래스 부여
         const cardEl = slot.querySelector('.card');
         if (cardEl) cardEl.classList.add('replay');
-
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
       deck.appendChild(div);
