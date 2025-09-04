@@ -8,6 +8,16 @@
     :root{
       /* 카드/덱 공통 바깥폭(테두리 포함 폭) */
       --contentW: min(320px, 85vw);
+
+      /* ✅ 기본 테마 색 지정 (body가 참조) */
+      --text: #1b1b1b;
+      --bg: #fafafa;
+      --muted: #5f6b7a;
+
+      /* ✅ 보더 색 */
+      --red: #d62828;
+      --blue:#3a86ff;
+      --gray:#333;
     }
     html,body{height:100%}
     body{
@@ -32,8 +42,10 @@
         inset 0 1px 0 rgba(255,255,255,.7);
       transform:translateY(0); transition:.2s ease;
       position:relative; min-width:160px;
+      touch-action:manipulation;      /* 모바일 탭 지연 방지 */
     }
-    .cta::after{ /* 하이라이트 광택 */
+    .cta[disabled]{ opacity:.6; cursor:not-allowed; }
+    .cta::after{
       content:""; position:absolute; inset:0; border-radius:inherit;
       background:linear-gradient(180deg,rgba(255,255,255,.6),transparent 40%);
       pointer-events:none; mix-blend-mode:soft-light;
@@ -112,15 +124,11 @@
 
     /* 덱 내부 여백은 섹션이 아니라 안쪽 래퍼에서 처리 */
     .deck-inner{ padding:12px }
-    
-    /* 덱 제목 */
     .deck-title{ margin:0 0 10px; font-weight:900 }
 
-    /* 덱 그리드: 안쪽 패딩을 여기에 */
     .deck-container{
       display:grid; gap:10px;
       grid-template-columns:repeat(auto-fill, minmax(88px, 1fr));
-      /* padding 제거! 패딩은 .deck-inner가 담당 */
     }
     .deck-card{
       padding:6px; border:3px solid #666; border-radius:10px; background:#fff;
@@ -135,19 +143,45 @@
     .deck-card img{width:72px; height:72px; object-fit:contain}
     .deck-card-name{font-size:12px; margin-top:5px; text-transform:capitalize}
 
-    /* 등급 텍스트 */
     .grade{font-weight:700}
     .grade-S{color:#d62828; font-weight:900}
+
+    .title {
+    font-size: clamp(28px, 6vw, 42px);
+    font-weight: 800;
+    margin: 10px 0 18px;
+    background: linear-gradient(90deg, #ffa159dc, #ff914d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    /* 은은한 그림자 한 겹만 */
+    text-shadow: 1px 2px 4px rgba(0,0,0,0.25);
+
+    /* 부드러운 등장 효과 */
+    animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 덱에서 다시 본 카드 스타일 */
+    .card.replay {
+    background: #f9f9f9;   /* 옅은 회색 배경 */
+    border-color: #aaa;    /* 보더도 살짝 연하게 */
+    }
   </style>
 </head>
 <body>
-  <h1>포켓몬 카드 뽑기</h1>
+  <h1 class="title">포켓몬 카드 랜덤 뽑기</h1>
 
   <div id="controls">
     <button id="draw-button" class="cta" aria-label="카드 뽑기">🎴 카드 뽑기!</button>
   </div>
 
-  <div id="status">전체 목록 로딩 중… (잠시만 기다려 주세요)</div>
+  <!-- ✅ ARIA 라이브 리전 지정 -->
+  <div id="status" role="status" aria-live="polite">전체 목록 로딩 중… (잠시만 기다려 주세요)</div>
   <div class="progress-wrap" id="progress-wrap" aria-hidden="false">
     <div class="progress-fill" id="progress-fill" style="width:0%"></div>
   </div>
@@ -156,11 +190,11 @@
 
   <!-- 덱 섹션: 처음엔 숨김, 첫 카드 뽑히면 .show 부여 -->
   <section id="deck-section" class="deck-section" aria-hidden="true">
-  <div class="deck-inner">             <!-- ✅ 내부 패딩 전담 래퍼 -->
-    <h2 class="deck-title">내가 뽑은 카드</h2>
-    <div class="deck-container" id="deck-container"></div>
-  </div>
-</section>
+    <div class="deck-inner">
+      <h2 class="deck-title">내가 뽑은 카드</h2>
+      <div class="deck-container" id="deck-container"></div>
+    </div>
+  </section>
 
 <script>
   /* =============== 설정/상태 =============== */
@@ -204,6 +238,26 @@
       }
     }
   }
+    const DRAWING_LABEL = '🎴 뽑는 중…';
+    const RESUME_LABEL  = '🎴 카드 뽑기!';
+    const COOLDOWN_MS = 3000; // 3초
+    function startCooldown(btn, ms = COOLDOWN_MS, resumeLabel = RESUME_LABEL){
+    const end = Date.now() + ms;
+    btn.setAttribute('disabled', 'true');
+
+    const tick = () => {
+        const left = end - Date.now();
+        if (left <= 0) {
+        btn.removeAttribute('disabled');
+        btn.textContent = resumeLabel;       // ✅ 쿨다운 끝나면 항상 이 라벨로 복구
+        return;
+        }
+        const sec = Math.ceil(left / 1000);
+        btn.textContent = `⏳ ${sec}초 대기 중…`;
+        requestAnimationFrame(tick);
+    };
+    tick();
+    }
 
   function setStatus(msg){ const el = document.getElementById('status'); if (el) el.textContent = msg; }
   function setProgress(pct){ const bar = document.getElementById('progress-fill'); if (bar) bar.style.width = Math.max(0,Math.min(100,pct))+'%'; }
@@ -228,7 +282,6 @@
     return 'border-gray';
   }
 
-  /* 고유 코드 생성: #5H22 형태 4자리 (혼동문자 제외) */
   function genCode(n = 4){
     const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
     let out = '';
@@ -236,7 +289,6 @@
     return out;
   }
 
-  /* =============== 폴백 인덱스 =============== */
   function buildFallbackIndex(maxId = 1025){
     const arr = [];
     for(let id=1; id<=maxId; id++){
@@ -315,19 +367,21 @@
     );
     const species = await fetchJSON(info.species?.url || (speciesAPI + info.name));
 
-    const nameKo = species.names.find(n=>n.language.name==='ko')?.name || info.name;
-    const types  = info.types.map(t=>t.type.name);
-    const stats  = info.stats.map(s=>({ name:s.stat.name, value:s.base_stat }));
-    const flavor = (species.flavor_text_entries.find(e=>e.language.name==='ko')?.flavor_text || '').replace(/\n|\f/g,' ');
+    const nameKo = species?.names?.find(n=>n.language.name==='ko')?.name || info.name || '이름 없음';
+    const types  = (info.types || []).map(t=>t.type.name);
+    const stats  = (info.stats || []).map(s=>({ name:s.stat.name, value:s.base_stat }));
+    const flavor = (species?.flavor_text_entries?.find(e=>e.language.name==='ko')?.flavor_text || '')
+                    .replace(/\n|\f/g,' ')
+                    || '설명이 없습니다.';
 
     const thumb =
-      info.sprites.front_default ||
-      info.sprites.other?.dream_world?.front_default ||
-      info.sprites.other?.home?.front_default ||
-      info.sprites.other?.['official-artwork']?.front_default || '';
+      info.sprites?.front_default ||
+      info.sprites?.other?.dream_world?.front_default ||
+      info.sprites?.other?.home?.front_default ||
+      info.sprites?.other?.['official-artwork']?.front_default || '';
     const image =
-      info.sprites.other?.['official-artwork']?.front_default ||
-      info.sprites.other?.home?.front_default ||
+      info.sprites?.other?.['official-artwork']?.front_default ||
+      info.sprites?.other?.home?.front_default ||
       thumb;
 
     const obj = { id: info.id, nameKo, image, thumb, types, stats, flavor };
@@ -343,23 +397,19 @@
     const statsToUse = p.gradedStats || p.stats;
     const borderCls = borderClassByGrades(statsToUse);
     const cls = `card ${borderCls}`;
-    const badgeHTML = p.types.map(t=>`<span class="type-badge type-${t}">${t}</span>`).join(' ');
-    const statNamesKor = {
-      hp: 'HP', attack: '공격', defense: '방어',
-      'special-attack': '특수공격', 'special-defense': '특수방어', speed: '스피드'
-    };
+    const badgeHTML = (p.types||[]).map(t=>`<span class="type-badge type-${t}">${t}</span>`).join(' ');
     const rows = statsToUse.map(s=>{
       const gradeHTML = s.grade ? ` <span class="grade ${s.grade==='S' ? 'grade-S' : ''}">(${s.grade})</span>` : '';
-      return `<tr><th>${statNamesKor[s.name]}</th><td>${s.value}${gradeHTML}</td></tr>`;
+      return `<tr><th>${statNamesKor[s.name] || s.name}</th><td>${s.value}${gradeHTML}</td></tr>`;
     }).join('');
 
     return `
       <div class="${cls}">
         <img src="${p.image}" alt="${p.nameKo}" loading="eager" decoding="async">
         <div class="card-name">${p.nameKo} (#${p.id})</div>
-        <div style="margin-bottom:6px;">${badgeHTML}</div>
+        <div style="margin-bottom:6px;">${badgeHTML || ''}</div>
         <table class="info-table">
-          <tr><th>설명</th><td>${p.flavor || '설명이 없습니다.'}</td></tr>
+          <tr><th>설명</th><td>${p.flavor}</td></tr>
           ${rows}
         </table>
       </div>
@@ -392,7 +442,18 @@
 
   /* =============== 이벤트 =============== */
   const drawBtn = document.getElementById('draw-button');
+  let isDrawing = false;
+
   drawBtn.addEventListener('click', async ()=>{
+    if (isDrawing) return;                 // ✅ 연속 클릭 방지
+    isDrawing = true;
+    // ✅ 클릭 직후 라벨은 고정 상수로
+    drawBtn.textContent = DRAWING_LABEL;
+    drawBtn.setAttribute('disabled', 'true');
+    const oldLabel = drawBtn.textContent;
+    drawBtn.textContent = '🎴 뽑는 중…';
+    drawBtn.setAttribute('disabled', 'true');
+
     if (!indexList.length) {
       fallbackMode = true;
       indexList = buildFallbackIndex();
@@ -403,8 +464,17 @@
 
     const meta = indexList[Math.floor(Math.random()*indexList.length)];
     setStatus('상세 로딩 중…');
+
     try{
-      const pick = await getPokemonDetail(meta.url);
+      const pick = await getPokemonDetail(meta.url || meta.name);
+
+      // ✅ 이미지 프리로드로 깜빡임 감소
+      if (pick.image) {
+        const pre = new Image();
+        pre.src = pick.image;
+        try { await pre.decode?.(); } catch(_) {}
+      }
+
       if (!pick.gradedStats) pick.gradedStats = (function(stats){
         const gradeMultiplier = { S:1.00, A:0.95, B:0.90, C:0.85 };
         const gradeWeights    = { S:20, A:35, B:30, C:15 };
@@ -413,8 +483,8 @@
           for(const [g,w] of Object.entries(gradeWeights)){acc+=w;if(r<acc)return g;}
           return 'C';
         };
-        return stats.map(s=>{ const g=rpick(); return { ...s, value:Math.round(s.value*gradeMultiplier[g]), grade:g }; });
-      })(pick.stats);
+        return (stats||[]).map(s=>{ const g=rpick(); return { ...s, value:Math.round(s.value*gradeMultiplier[g]), grade:g }; });
+      })(pick.stats || []);
 
       playChime();
       document.getElementById('card-slot').innerHTML = renderCard(pick);
@@ -431,10 +501,15 @@
       const div = document.createElement('div');
       div.className = 'deck-card';
       div.innerHTML = `
-        <img src="${pick.thumb}" alt="" loading="lazy" decoding="async">
+        <img src="${pick.thumb || pick.image}" alt="" loading="lazy" decoding="async">
         <div class="deck-card-name">${pick.nameKo}</div>`;
       div.addEventListener('click', ()=>{
-        document.getElementById('card-slot').innerHTML = renderCard(pick);
+        const slot = document.getElementById('card-slot');
+        slot.innerHTML = renderCard(pick);
+        // 방금 렌더링한 카드에 replay 클래스 부여
+        const cardEl = slot.querySelector('.card');
+        if (cardEl) cardEl.classList.add('replay');
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
       deck.appendChild(div);
@@ -444,7 +519,11 @@
       setStatus(`고유번호 : #${uniq}`);
     }catch(e){
       console.error(e);
-      setStatus('상세 로딩 실패 (네트워크/레이트 리밋 가능). 다른 카드를 시도해 보세요.');
+        setStatus('상세 로딩 실패 (네트워크/레이트 리밋 가능). 다른 카드를 시도해 보세요.');
+    } finally {
+        isDrawing = false;
+        // ✅ 쿨다운 끝나면 무조건 RESUME_LABEL 로 돌아가게
+        startCooldown(drawBtn, COOLDOWN_MS, RESUME_LABEL);
     }
   });
 
