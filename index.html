@@ -216,22 +216,36 @@
     }
 
     /* 스파클 레이어 */
-    .fx-layer{ position:absolute; inset:-8px; pointer-events:none; overflow:visible; filter: drop-shadow(0 0 6px rgba(255,220,120,.75)); }
+    .fx-layer{
+    position:absolute; inset:-8px; pointer-events:none; overflow:visible;
+    /* 테마에 따라 바뀌는 글로우 */
+    filter: drop-shadow(0 0 6px var(--fx-glow, rgba(255,220,120,.75)));
+    }
+    /* 기본 팔레트 변수(테마가 안 붙었을 때) */
+    .fx-layer{ --spA:#ffffff; --spB:#ffd166; --fx-glow:rgba(255,220,120,.85); }
+
+    /* 테마: 빨강/파랑/골드(기본) */
+    .fx-layer.theme-red  { --spA:#ffffff; --spB:#ff6b6b; --fx-glow: rgba(255,80,80,.85); }
+    .fx-layer.theme-blue { --spA:#e6f0ff; --spB:#6ea8ff; --fx-glow: rgba(110,168,255,.90); }
+    .fx-layer.theme-gold { --spA:#ffffff; --spB:#ffd166; --fx-glow: rgba(255,220,120,.85); }
+
     .fx-star,.fx-shard{
-      position:absolute; opacity:0; transform: translateZ(0) scale(.6); will-change: transform, opacity;
+    position:absolute; opacity:0; transform: translateZ(0) scale(.6); will-change: transform, opacity;
     }
-    /* 별(원형 그라디언트) */
+    /* 별(원형 그라디언트) — 팔레트 변수 사용 */
     .fx-star{
-      width: var(--sz,10px); height: var(--sz,10px); border-radius:50%;
-      background: radial-gradient(circle, #fff, #ffd166 48%, rgba(255,209,102,0) 70%);
-      animation: sparkle var(--sparkleDur, 1100ms) ease-out forwards;
-    }
-    /* 샤드(빛조각) */
-    .fx-shard{
-      width: 2px; height: var(--len,16px); background: linear-gradient(#fff, #ffe08a);
-      border-radius: 1px; transform-origin: center bottom; animation: shard var(--sparkleDur, 1100ms) ease-out forwards;
+    width: var(--sz,10px); height: var(--sz,10px); border-radius:50%;
+    background: radial-gradient(circle, var(--spA), var(--spB) 48%, transparent 70%);
+    animation: sparkle var(--sparkleDur, 1100ms) ease-out forwards;
     }
 
+    /* 샤드(빛조각) — 팔레트 변수 사용 */
+    .fx-shard{
+    width: 2px; height: var(--len,16px);
+    background: linear-gradient(var(--spA), var(--spB));
+    border-radius: 1px; transform-origin: center bottom;
+    animation: shard var(--sparkleDur, 1100ms) ease-out forwards;
+    }
     @keyframes sparkle{
       0%{ opacity:0; transform:translateY(6px) scale(.6) rotate(0deg) }
       15%{ opacity:1 }
@@ -264,7 +278,7 @@
 
     /* (선택) 재보기 뱃지 */
     #card-slot .card.replay .card-name::after{
-    content: "재보기";
+    content: "카드덱";
     margin-left: 8px;
     font-size: 12px;
     font-weight: 700;
@@ -276,10 +290,10 @@
   </style>
 </head>
 <body>
-  <h1 class="title">포켓몬 카드 뽑기</h1>
+  <h1 class="title">포켓몬 카드 랜덤 뽑기</h1>
 
   <div id="controls">
-    <button id="draw-button" class="cta" aria-label="카드 뽑기">🎴 카드 뽑기!</button>
+    <button id="draw-button" class="cta" aria-label="카드 뽑기">🎴 카드 뽑기 🎴</button>
   </div>
 
   <div id="status" role="status" aria-live="polite">전체 목록 로딩 중… (잠시만 기다려 주세요)</div>
@@ -323,8 +337,8 @@
   };
 
   /* 쿨다운 라벨/시간 */
-  const DRAWING_LABEL = '🎴 뽑는 중…';
-  const RESUME_LABEL  = '🎴 카드 뽑기!';
+  const DRAWING_LABEL = '🎴 뽑는 중 🎴';
+  const RESUME_LABEL  = '🎴 카드 뽑기 🎴';
   const COOLDOWN_MS   = 3000;
 
   /* =============== 유틸 =============== */
@@ -550,7 +564,14 @@
     const badgeHTML = (p.types||[]).map(t=>`<span class="type-badge type-${t}">${t}</span>`).join(' ');
     const rows = (p.stats||[]).map(s=>{
       const isS = s.grade==='S';
-      return `<tr><th>${statNamesKor[s.name] || s.name}</th><td>${s.value} ${s.grade ? `<span class="grade ${isS?'grade-S':''}">(${s.grade})</span>`:''}</td></tr>`;
+      return `
+        <tr>
+        <th>${statNamesKor[s.name] || s.name}</th>
+        <td class="${isS ? 's-grade' : ''}">
+            ${s.value}
+            ${s.grade ? ` <span class="grade ${isS?'grade-S':''}">(${s.grade})</span>` : ''}
+        </td>
+        </tr>`;
     }).join('');
     return `
       <div class="card ${borderCls}">
@@ -625,11 +646,21 @@
 
       // 2) 플립 마크업 주입
       slot.innerHTML = renderFlipCardMarkup(frontHTML);
+      // ▶ 카드 등급(보더) → 스파클 테마 매핑
+      const borderCls = borderClassByGrades(pick.stats || []);
+      const fxLayer = slot.querySelector('.fx-layer');
+      if (borderCls === 'border-red') {
+      fxLayer.classList.add('theme-red');
+      } else if (borderCls === 'border-blue') {
+      fxLayer.classList.add('theme-blue');
+      } else {
+      fxLayer.classList.add('theme-gold'); // 기본(노란 느낌)
+      }
       
       // 3) 반짝이 강화
-      addSparkles(slot.querySelector('.fx-layer'));
-
-      // 4) 다음 프레임에 플립 트리거(뒤→앞, 1.5s)
+      addSparkles(fxLayer);
+      
+      // 4) 다음 프레임에 플립 트리거(뒤→앞, 6.5s)
       const card3d = slot.querySelector('#card3d');
       card3d.style.height = h + 'px';
       requestAnimationFrame(()=> card3d.classList.add('is-flipped'));
