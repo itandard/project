@@ -114,16 +114,48 @@
 
     /* ====== Draw 연출: 3D 플립 & 스파클 ====== */
     .card-slot{ min-height:0 } /* JS에서 동적 min-height 세팅 */
-    .card-wrap{ width:var(--contentW); margin:16px auto; position:relative; perspective:1000px; }
+    .card-wrap{
+      width: var(--contentW);
+      margin:16px auto;
+      position:relative;
+      perspective:1000px;
+      -webkit-perspective:1000px; /* iOS */
+      }
     .card-3d{
-      position:relative; transform-style:preserve-3d;
-      transition: transform var(--flipDur) cubic-bezier(.19,.9,.22,1);
-      will-change: transform; contain: layout paint;
+      position: relative;
+      /* 3D 보존 */
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      /* 트랜지션 */
+      transition: transform var(--flipDur) cubic-bezier(.19,.9,.22,1);      will-change: transform;
+
+      /* iOS 렌더링 깨짐 방지 */
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
     }
-    .face{ position:absolute; inset:0; border-radius:16px; backface-visibility:hidden; }
-    .face > .card{ margin:0 }      /* 앞면 카드 레이아웃 */
-    .face.front{ transform: rotateY(180deg) }  /* 앞면은 뒤집어 둠 */
-    .card-3d.is-flipped{ transform: rotateY(180deg) }
+    .face{
+      position:absolute; inset:0; border-radius:16px;
+
+      /* 뒤집힌 면 숨기기 */
+      backface-visibility:hidden;
+      -webkit-backface-visibility:hidden;
+
+      /* iOS에서 깜빡임/깊이 충돌 방지 */
+      transform: translateZ(0.1px);
+      -webkit-transform: translateZ(0.1px);
+      }
+
+      /* 앞면은 Y로 뒤집어 둠(부모가 돌아오며 정면 표시) */
+      .face.front{
+      transform: rotateY(180deg) translateZ(0.1px);
+      -webkit-transform: rotateY(180deg) translateZ(0.1px);
+      }
+
+      /* 플립 완료 상태 */
+      .card-3d.is-flipped{
+      transform: rotateY(180deg);
+      -webkit-transform: rotateY(180deg);
+    }
 
     /* 뒷면(간단 포켓볼풍) */
     .card-back{
@@ -157,6 +189,8 @@
         transparent calc(50% + var(--bandH)/2)) ,
         /* 위/아래 반반 색상 */
         linear-gradient(to bottom, #e53935 0 50%, #ffffff 50% 100%);
+        transform: translateZ(0.1px);
+        -webkit-transform: translateZ(0.1px);
     }
     /* 포켓볼 중앙의 '검은 외곽 링' */
     .card-back::before{
@@ -656,7 +690,7 @@
       } else {
       fxLayer.classList.add('theme-gold'); // 기본(노란 느낌)
       }
-      
+            
       // 3) 반짝이 강화
       addSparkles(fxLayer);
       
@@ -664,6 +698,14 @@
       const card3d = slot.querySelector('#card3d');
       card3d.style.height = h + 'px';
       requestAnimationFrame(()=> card3d.classList.add('is-flipped'));
+
+      // ✅ 5) 리플로우 → 더블 RAF 후 플립 (iOS 안정화 핵심)
+      void card3d.offsetWidth;                 // 강제 리플로우
+      requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+          card3d.classList.add('is-flipped');  // 이제 뒤→앞 회전 확정
+      });
+    });
 
       // 덱 섹션 표시 & 썸네일 추가
       const deckSection = document.getElementById('deck-section');
