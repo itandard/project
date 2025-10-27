@@ -121,23 +121,17 @@
       perspective:1000px;
       -webkit-perspective:1000px; /* iOS */
       }
-    .card-3d{
+    .card-3d {
       position: relative;
-      /* 3D 보존 */
       transform-style: preserve-3d;
       -webkit-transform-style: preserve-3d;
-      /* 트랜지션 */
-      transition: transform var(--flipDur) cubic-bezier(.19,.9,.22,1);      will-change: transform;
-
-      /* iOS 렌더링 깨짐 방지 */
+      transition: transform var(--flipDur) cubic-bezier(.19,.9,.22,1);
+      will-change: transform;
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
-
-      /* backface 숨김 안정화 (추가) */
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
     }
-    .card-3d.is-flipped{
+    
+    .card-3d.is-flipped {
       transform: rotateY(180deg);
       -webkit-transform: rotateY(180deg);
     }
@@ -158,16 +152,23 @@
       }
 
       /* 앞면은 Y로 뒤집어 둠(부모가 돌아오며 정면 표시) */
-      .face.front{
-      transform: rotateY(180deg);
+      .face.front {
+        transform: rotateY(0deg); /* ✅ 앞면은 뒤집지 않음 */
+        -webkit-transform: rotateY(0deg);
+        z-index: 2;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+      }
+
+
+     /* 뒷면 */
+    .face.back {
+      transform: rotateY(180deg); /* ✅ 뒷면을 뒤집어서 기본상태에서 숨김 */
       -webkit-transform: rotateY(180deg);
-      z-index: 3; /* 앞면 우선 표시 */
-      }
-
-      .face.back{
-      z-index: 2;
-      }
-
+      z-index: 1;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
     /* 뒷면(간단 포켓볼풍) */
     .card-back{
     /* 크기/레이어 */
