@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>포켓몬 카드 뽑기</title>
 <style>
 :root {
-  --flipDur: 1.8s;
-  --easeOut: cubic-bezier(.19,.9,.22,1);
-  --easeIn: cubic-bezier(.64,.04,.35,1);
+  --flipDur: 1.6s;
+  --easeOut: cubic-bezier(.19, .9, .22, 1);
+  --easeIn: cubic-bezier(.64, .04, .35, 1);
 }
 
 body {
   margin: 0;
-  background: radial-gradient(circle at 50% 30%, #ffdf4d 0%, #ffb300 80%);
   height: 100vh;
   overflow: hidden;
+  background: radial-gradient(circle at 50% 30%, #ffe082 0%, #ffca28 80%);
   display: grid;
   place-items: center;
   perspective: 1000px;
@@ -23,34 +23,34 @@ body {
   font-family: 'Pretendard', sans-serif;
 }
 
+/* 제목 */
 h1.title {
   position: absolute;
-  top: 6vh;
-  color: #fff;
-  text-shadow: 0 0 10px #ffb300;
+  top: 5vh;
   font-size: clamp(1.5rem, 4vw, 3rem);
-  letter-spacing: 2px;
-  animation: pulse 2s infinite alternate;
+  color: white;
+  text-shadow: 0 0 10px #ffb300;
+  animation: glow 2s ease-in-out infinite alternate;
 }
 
-@keyframes pulse {
+@keyframes glow {
   from { text-shadow: 0 0 10px #ffb300; }
   to { text-shadow: 0 0 25px #fff; }
 }
 
-/* 카드 전체 */
+/* 카드 영역 */
 .card-slot {
   position: relative;
-  width: clamp(180px, 40vw, 280px);
-  height: clamp(260px, 60vw, 400px);
+  width: clamp(200px, 40vw, 280px);
+  height: clamp(280px, 55vw, 400px);
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
 }
 
 .card-3d {
+  position: relative;
   width: 100%;
   height: 100%;
-  position: relative;
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
   transition: transform var(--flipDur) var(--easeOut);
@@ -62,14 +62,15 @@ h1.title {
   -webkit-transform: rotateY(180deg);
 }
 
-/* 앞면/뒷면 공통 */
+/* 카드 앞뒤 공통 */
 .face {
   position: absolute;
   inset: 0;
-  border-radius: 16px;
+  border-radius: 18px;
+  overflow: hidden;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  overflow: hidden;
+  /* ⚠️ Chrome/Edge 렌더링 오류 방지를 위해 translateZ 제거 */
 }
 
 /* 앞면 */
@@ -87,16 +88,6 @@ h1.title {
   place-items: center;
 }
 
-.face.back::before {
-  content: '';
-  position: absolute;
-  width: 80%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 35%, #fff 0%, transparent 70%);
-  opacity: 0.3;
-}
-
 .face.back img {
   width: 50%;
   animation: spin 3s linear infinite;
@@ -107,9 +98,9 @@ h1.title {
   100% { transform: rotate(360deg); }
 }
 
-/* 카드 뽑기 로딩 애니메이션 */
+/* 로딩 시 카드가 튀어나오는 효과 */
 .card-3d.loading {
-  animation: popUp 1.6s var(--easeOut);
+  animation: popUp 1.5s var(--easeOut);
 }
 
 @keyframes popUp {
@@ -118,7 +109,7 @@ h1.title {
     opacity: 0;
   }
   50% {
-    transform: scale(1.05) rotateY(180deg);
+    transform: scale(1.1) rotateY(180deg);
     opacity: 1;
   }
   100% {
@@ -126,7 +117,7 @@ h1.title {
   }
 }
 
-/* 반짝이는 별 */
+/* 반짝이 효과 */
 .sparkle {
   position: absolute;
   width: 6px;
@@ -154,7 +145,8 @@ h1.title {
   <div class="card-slot">
     <div class="card-3d loading">
       <div class="face front">
-        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" alt="피카츄" style="width:80%; display:block; margin:40px auto;">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
+             alt="피카츄" style="width:80%; display:block; margin:40px auto;">
       </div>
       <div class="face back">
         <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Poké_Ball_icon.svg" alt="포켓볼">
@@ -162,8 +154,8 @@ h1.title {
     </div>
   </div>
 
-  <!-- 별 반짝이 생성 -->
   <script>
+  // ⭐ 반짝이(스파클) 자동 생성
   const container = document.body;
   for (let i = 0; i < 30; i++) {
     const s = document.createElement('div');
@@ -174,6 +166,14 @@ h1.title {
     s.style.animationDuration = (0.8 + Math.random() * 1.2) + 's';
     container.appendChild(s);
   }
+
+  // 로딩 후 카드 등장 애니메이션 제거
+  window.addEventListener('load', () => {
+    const card = document.querySelector('.card-3d');
+    setTimeout(() => {
+      card.classList.remove('loading');
+    }, 1800);
+  });
   </script>
 </body>
 </html>
